@@ -4,7 +4,7 @@ import ProtectedRoute from "./ProtectedRoutes";
 import ProtectedRoute2 from "./ProtectedRoutes2";
 import AppLayout from "../layout";
 import { authRouters, protectedRouters, protectedRouters2 } from "./router.config";
-import Header from "../layout/header/MainHeader";
+import Header from "../layout/header/mainHeader";
 
 const AppRouter = () => {
   return (

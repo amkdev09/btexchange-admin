@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Box, Button, IconButton, Typography, Avatar, useMediaQuery, Menu, MenuItem, ListItemIcon } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { Box, IconButton, Typography, Avatar, useMediaQuery, Menu, MenuItem, ListItemIcon } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useAuth } from "../../hooks/useAuth";
 import MenuIcon from "@mui/icons-material/Menu";
