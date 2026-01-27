@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import BtParalex from "../../components/heroBetBit/BtParalex";
-import Header from "../../layout/header/mianHeader";
+import Header from "../../layout/header/mainHeader.jsx";
 import TextInput from "../../components/input/textInput";
 import { AppColors } from "../../constant/appColors";
 import authService from "../../services/authService";
