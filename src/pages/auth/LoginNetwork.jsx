@@ -19,8 +19,8 @@ import { AppColors } from "../../constant/appColors";
 import networkService from "../../services/networkService";
 import useSnackbar from "../../hooks/useSnackbar";
 import TextInput from "../../components/input/textInput";
-import Cookies from "js-cookie";
 import BtParalex from "../../components/heroBetBit/BtParalex";
+import { useAuth2 } from "../../hooks/useAuth2";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -36,6 +36,7 @@ export default function NetworkAdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
+  const { setUser } = useAuth2();
 
   const formik = useFormik({
     initialValues: {
@@ -55,7 +56,7 @@ export default function NetworkAdminLogin() {
         const { data, message } = response || {};
 
         if (data?.token) {
-          Cookies.set("token2", data.token);
+          setUser(data.user, data.token);
           showSnackbar(message || "Login successful", "success");
           navigate("/network/dashboard");
         }

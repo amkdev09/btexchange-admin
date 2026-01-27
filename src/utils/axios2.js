@@ -45,43 +45,43 @@ networkApi.interceptors.response.use(
 
     const exaptRoute = ['/network/login'];
 
-    // if (status === 401 && !originalRequest._retry && !exaptRoute.includes(location.pathname)) {
-    //   if (isRefreshing) {
-    //     return new Promise((resolve, reject) => {
-    //       failedQueue.push({ resolve, reject });
-    //     })
-    //       .then((token) => {
-    //         originalRequest.headers.Authorization = `Bearer ${token}`;
-    //         return networkApi(originalRequest);
-    //       })
-    //       .catch((err) => {
-    //         return Promise.reject(err);
-    //       });
-    //   }
+    if (status === 401 && !originalRequest._retry && !exaptRoute.includes(location.pathname)) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return networkApi(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
 
-    //   originalRequest._retry = true;
-    //   isRefreshing = true;
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-    //   try {
-    //     Cookies.remove("token2");
-    //     // Note: Second game may not have refresh token endpoint, handle accordingly
-    //     // For now, redirect to login2 if refresh fails
-    //     const refreshToken = Cookies.get("refreshToken2");
-    //     if (!refreshToken) {
-    //       throw new Error("No refresh token available");
-    //     }
-    //     // If second game has refresh endpoint, implement it here
-    //     // For now, redirect to login2
-    //     throw new Error("Token refresh not implemented for second game");
-    //   } catch (refreshError) {
-    //     processQueue(refreshError, null);
-    //     isRefreshing = false;
-    //     window.location.replace("/network/login");
-    //     Cookies.remove("token2");
-    //     Cookies.remove("refreshToken2");
-    //     return Promise.reject(refreshError);
-    //   }
-    // }
+      try {
+        Cookies.remove("token2");
+        // Note: Second game may not have refresh token endpoint, handle accordingly
+        // For now, redirect to login2 if refresh fails
+        const refreshToken = Cookies.get("refreshToken2");
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+        // If second game has refresh endpoint, implement it here
+        // For now, redirect to login2
+        throw new Error("Token refresh not implemented for second game");
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        window.location.replace("/network/login");
+        Cookies.remove("token2");
+        Cookies.remove("refreshToken2");
+        return Promise.reject(refreshError);
+      }
+    }
 
     if ([403, 500, 502].includes(status)) { }
 

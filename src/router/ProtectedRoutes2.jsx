@@ -3,7 +3,7 @@ import { useAuth2 } from "../hooks/useAuth2";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect } from "react";
 
-const ProtectedRoute2 = ({ children, roles }) => {
+const ProtectedRoute2 = ({ children }) => {
   const location = useLocation();
   const { token } = useAuth2();
   const { setIsSecondGame, isSecondGame } = useAuth();

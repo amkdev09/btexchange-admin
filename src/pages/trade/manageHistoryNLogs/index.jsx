@@ -14,14 +14,20 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TableFooter,
   TableRow,
+  TablePagination,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
-  Pagination,
   Card,
   CardContent,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -32,6 +38,7 @@ import {
   Search,
   History,
   ShowChart,
+  Visibility,
 } from '@mui/icons-material';
 import tradeService from '../../../services/tradeService';
 import { AppColors } from '../../../constant/appColors';
@@ -45,7 +52,7 @@ const ManageHistoryNLogs = () => {
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 10,
     total: 0,
     totalPages: 0
   });
@@ -56,11 +63,19 @@ const ManageHistoryNLogs = () => {
     status: '',
     type: '',
     pair: '',
-    startDate: dayjs(),
-    endDate: dayjs()
+    startDate: null,
+    endDate: null
+  });
+  const [appliedDateRange, setAppliedDateRange] = useState({
+    startDate: null,
+    endDate: null
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
+  const [incomeSummary, setIncomeSummary] = useState(null);
+  const [incomeDetailItem, setIncomeDetailItem] = useState(null);
+  const [tradeDetailItem, setTradeDetailItem] = useState(null);
+  const [depositDetailItem, setDepositDetailItem] = useState(null);
 
   const tabs = [
     { id: 'trades', label: 'Trades History', icon: <ShowChart /> },
@@ -71,19 +86,29 @@ const ManageHistoryNLogs = () => {
 
   useEffect(() => {
     loadHistoryData();
-  }, [activeTab, pagination.page, filters]);
+  }, [activeTab, pagination.page, pagination.limit, appliedDateRange]);
+
+  const getApiParams = (overrides = {}) => {
+    return {
+      page: overrides.page ?? pagination.page,
+      limit: overrides.limit ?? pagination.limit,
+      ...(filters.userId && { userId: filters.userId }),
+      ...(filters.uid && { uid: filters.uid }),
+      ...(filters.email && { email: filters.email }),
+      ...(filters.status && { status: filters.status }),
+      ...(filters.type && { type: filters.type }),
+      ...(filters.pair && { pair: filters.pair }),
+      ...(appliedDateRange.startDate && { startDate: appliedDateRange.startDate }),
+      ...(appliedDateRange.endDate && { endDate: appliedDateRange.endDate }),
+      ...overrides,
+    };
+  };
 
   const loadHistoryData = async () => {
     setLoading(true);
     try {
       let response;
-      const params = {
-        page: pagination.page,
-        limit: pagination.limit,
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, v]) => v !== '')
-        )
-      };
+      const params = getApiParams();
 
       switch (activeTab) {
         case 'trades':
@@ -103,11 +128,21 @@ const ManageHistoryNLogs = () => {
       }
 
       setData(response.data || []);
-      setPagination(prev => ({
-        ...prev,
-        total: response.total || 0,
-        totalPages: Math.ceil((response.total || 0) / pagination.limit)
-      }));
+      setPagination(prev => {
+        if (response.pagination) {
+          return { ...prev, ...response.pagination };
+        }
+        return {
+          ...prev,
+          total: response.total || 0,
+          totalPages: Math.ceil((response.total || 0) / (response.pagination?.limit ?? prev.limit))
+        };
+      });
+      if (activeTab === 'income' && response.summary) {
+        setIncomeSummary(response.summary);
+      } else {
+        setIncomeSummary(null);
+      }
     } catch (error) {
       console.error('Error loading history data:', error);
       setData([]);
@@ -118,6 +153,14 @@ const ManageHistoryNLogs = () => {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleApplyDateFilter = () => {
+    setAppliedDateRange({
+      startDate: filters.startDate ? dayjs(filters.startDate).format('DD-MM-YYYY') : null,
+      endDate: filters.endDate ? dayjs(filters.endDate).format('DD-MM-YYYY') : null,
+    });
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -141,9 +184,10 @@ const ManageHistoryNLogs = () => {
       status: '',
       type: '',
       pair: '',
-      startDate: '',
-      endDate: ''
+      startDate: null,
+      endDate: null
     });
+    setAppliedDateRange({ startDate: null, endDate: null });
     setSearchTerm('');
     setPagination(prev => ({ ...prev, page: 1 }));
   };
@@ -169,13 +213,7 @@ const ManageHistoryNLogs = () => {
       let hasMore = true;
 
       while (hasMore) {
-        const params = {
-          page: currentPage,
-          limit: 1000,
-          ...Object.fromEntries(
-            Object.entries(filters).filter(([_, v]) => v !== '')
-          )
-        };
+        const params = getApiParams({ page: currentPage, limit: 1000 });
 
         let response;
         switch (activeTab) {
@@ -239,17 +277,18 @@ const ManageHistoryNLogs = () => {
 
   const getStatusChip = (status) => {
     const statusConfig = {
-      WIN: { color: 'success', label: 'WIN' },
-      LOSS: { color: 'error', label: 'LOSS' },
-      OPEN: { color: 'warning', label: 'OPEN' },
+      WIN: { color: 'success', label: 'Win' },
+      LOSS: { color: 'error', label: 'Loss' },
+      OPEN: { color: 'warning', label: 'Open' },
       SUCCESS: { color: 'success', label: 'Success' },
       PENDING: { color: 'warning', label: 'Pending' },
       FAILED: { color: 'error', label: 'Failed' },
       COMPLETED: { color: 'success', label: 'Completed' },
-      PROCESSING: { color: 'warning', label: 'Processing' }
+      PROCESSING: { color: 'warning', label: 'Processing' },
+      CONFIRMED: { color: 'success', label: 'Confirmed' }
     };
 
-    const config = statusConfig[status] || { color: 'default', label: status };
+    const config = statusConfig[status] || { color: 'default', label: status || '—' };
 
     return (
       <Chip
@@ -258,122 +297,21 @@ const ManageHistoryNLogs = () => {
         color={config.color}
         sx={{
           fontWeight: 600,
-          fontSize: '0.75rem',
+          textTransform: 'none',
           '& .MuiChip-label': {
-            px: 1.5
+            px: { xs: 0.5, lg: 1 },
           }
         }}
       />
     );
   };
 
-  const renderMobileCard = (item, index) => {
-    const cardData = {
-      trades: {
-        id: item.userId || 'N/A',
-        status: item.status,
-        fields: [
-          { label: 'Pair', value: item.pair || 'N/A' },
-          { label: 'Amount', value: `$${formatAmount(item.amount)}`, highlight: true },
-          { label: 'Opened', value: formatDate(item.createdAt) },
-          { label: 'Profit/Loss', value: item.profit ? (item.profit > 0 ? '+' : '') + formatAmount(item.profit) : 'N/A', highlight: true, profit: item.profit }
-        ]
-      },
-      income: {
-        id: item.userId || 'N/A',
-        status: 'SUCCESS',
-        fields: [
-          { label: 'Type', value: item.type || 'N/A' },
-          { label: 'Amount', value: `+$${formatAmount(item.amount)}`, highlight: true, positive: true },
-          { label: 'From User', value: item.fromUserId || 'N/A' },
-          { label: 'Date', value: formatDate(item.createdAt) }
-        ]
-      },
-      deposits: {
-        id: item.userId || 'N/A',
-        status: item.status,
-        fields: [
-          { label: 'Amount', value: `$${formatAmount(item.amount)}`, highlight: true },
-          { label: 'Chain', value: item.chain || 'N/A' },
-          { label: 'Date', value: formatDate(item.createdAt) },
-          { label: 'TX Hash', value: item.txHash ? `${item.txHash.slice(0, 8)}...` : 'N/A' }
-        ]
-      },
-      withdrawals: {
-        id: item.userId || 'N/A',
-        status: item.status,
-        fields: [
-          { label: 'Amount', value: `-$${formatAmount(item.amount)}`, highlight: true, negative: true },
-          { label: 'Type', value: item.type || 'N/A' },
-          { label: 'Date', value: formatDate(item.createdAt) },
-          { label: 'TX Hash', value: item.txHash ? `${item.txHash.slice(0, 8)}...` : 'N/A' }
-        ]
-      }
-    };
-
-    const card = cardData[activeTab];
-
-    return (
-      <Card
-        key={index}
-        sx={{
-          mb: 2,
-          bgcolor: AppColors.BG_CARD,
-          border: `1px solid ${AppColors.BG_SECONDARY}`,
-          borderRadius: 2,
-          '&:hover': {
-            borderColor: AppColors.GOLD_DARK,
-            boxShadow: `0 4px 12px ${AppColors.GOLD_DARK}20`
-          }
-        }}
-      >
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, pb: 1.5, borderBottom: `1px solid ${AppColors.BG_SECONDARY}` }}>
-            <Typography variant="body2" sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
-              ID: {card.id}
-            </Typography>
-            {getStatusChip(card.status)}
-          </Box>
-          <Grid container spacing={2}>
-            {card.fields.map((field, idx) => (
-              <Grid size={{ xs: 6 }} key={idx}>
-                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, display: 'block', mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {field.label}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: field.highlight
-                      ? field.positive
-                        ? AppColors.SUCCESS
-                        : field.negative
-                          ? AppColors.ERROR
-                          : field.profit && field.profit > 0
-                            ? AppColors.SUCCESS
-                            : field.profit && field.profit < 0
-                              ? AppColors.ERROR
-                              : AppColors.GOLD_DARK
-                      : AppColors.TXT_MAIN,
-                    fontWeight: field.highlight ? 600 : 400,
-                    fontFamily: field.label === 'TX Hash' ? 'monospace' : 'inherit'
-                  }}
-                >
-                  {field.value}
-                </Typography>
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
-    );
-  };
-
   const renderFilters = () => (
     <Box
-      sx={{ mb: { xs: 1, md: 1.5 }, borderBottom: `1px solid ${AppColors.BG_SECONDARY}`, py: { xs: 1, md: 1.5 } }}
+      sx={{ pt: { xs: 1, md: 1.5 } }}
     >
       <Grid container spacing={{ xs: 1, md: 1.5 }}>
-        <Grid size={{ xs: 6, md: 4 }}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <TextField
             id="outlined-basic"
             label="Search by User ID, UID, or Email"
@@ -395,7 +333,7 @@ const ManageHistoryNLogs = () => {
 
         {activeTab === 'trades' && (
           <>
-            <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+            <Grid size={{ xs: 6, lg: 2 }}>
               <FormControl fullWidth sx={{
                 "& .MuiOutlinedInput-root": {
                   height: 48, // consistent height
@@ -435,7 +373,7 @@ const ManageHistoryNLogs = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+            <Grid size={{ xs: 6, lg: 2 }}>
               <TextField
                 id="outlined-basic"
                 variant="outlined"
@@ -458,34 +396,44 @@ const ManageHistoryNLogs = () => {
         )}
 
         {activeTab === 'income' && (
-          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
-            <FormControl fullWidth sx={{
-              "& .MuiOutlinedInput-root": {
-                height: 48, // consistent height
-                alignItems: "center",
-              },
-              "& .MuiOutlinedInput-input": {
-                padding: "12px 10px", // proper spacing
-              },
-            }}>
-              <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
-                Income Type
-              </InputLabel>
-              <Select
-                value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                label="Income Type"
-              >
-                <MenuItem value="">All Types</MenuItem>
-                <MenuItem value="REFERRAL_BONUS">Referral Bonus</MenuItem>
-                <MenuItem value="LEVEL_INCOME">Level Income</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+          <>
+            <Grid size={{ xs: 6, lg: 2 }}>
+              <FormControl fullWidth sx={{
+                "& .MuiOutlinedInput-root": { height: 48, alignItems: "center" },
+                "& .MuiOutlinedInput-input": { padding: "12px 10px" },
+              }}>
+                <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
+                  Income Type
+                </InputLabel>
+                <Select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)} label="Income Type">
+                  <MenuItem value="">All Types</MenuItem>
+                  <MenuItem value="REFERRAL_BONUS">Referral Bonus</MenuItem>
+                  <MenuItem value="LEVEL_INCOME">Level Income</MenuItem>
+                  <MenuItem value="SALARY_INCOME">Salary Income</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 6, lg: 2 }}>
+              <FormControl fullWidth sx={{
+                "& .MuiOutlinedInput-root": { height: 48, alignItems: "center" },
+                "& .MuiOutlinedInput-input": { padding: "12px 10px" },
+              }}>
+                <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
+                  Status
+                </InputLabel>
+                <Select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} label="Status">
+                  <MenuItem value="">All Status</MenuItem>
+                  <MenuItem value="CONFIRMED">Confirmed</MenuItem>
+                  <MenuItem value="PENDING">Pending</MenuItem>
+                  <MenuItem value="FAILED">Failed</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </>
         )}
 
         {(activeTab === 'deposits' || activeTab === 'withdrawals') && (
-          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+          <Grid size={{ xs: 6, lg: 2 }}>
             <FormControl fullWidth sx={{
               "& .MuiOutlinedInput-root": {
                 height: 48, // consistent height
@@ -512,7 +460,7 @@ const ManageHistoryNLogs = () => {
         )}
 
         {activeTab === 'withdrawals' && (
-          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+          <Grid size={{ xs: 6, lg: 2 }}>
             <FormControl fullWidth sx={{
               "& .MuiOutlinedInput-root": {
                 height: 48, // consistent height
@@ -538,152 +486,163 @@ const ManageHistoryNLogs = () => {
           </Grid>
         )}
 
-        <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+        <Grid size={{ xs: 6, lg: 2 }}>
           <DatePicker
             label="Start Date"
             value={filters.startDate}
-            onChange={(newValue) => handleFilterChange('startDate', newValue)}
+            onChange={(newValue) => setFilters(prev => ({ ...prev, startDate: newValue }))}
+            slotProps={{ textField: { fullWidth: true } }}
             sx={{
+              width: '100%',
               "& .MuiPickersSectionList-root": {
-                padding: "13px 10px", // proper spacing
+                padding: "13px 10px",
               },
             }}
           />
         </Grid>
 
-        <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+        <Grid size={{ xs: 6, lg: 2 }}>
           <DatePicker
             label="End Date"
             value={filters.endDate}
-            onChange={(newValue) => handleFilterChange('endDate', newValue)}
+            onChange={(newValue) => setFilters(prev => ({ ...prev, endDate: newValue }))}
+            slotProps={{ textField: { fullWidth: true } }}
             sx={{
+              width: '100%',
               "& .MuiPickersSectionList-root": {
-                padding: "13px 10px", // proper spacing
+                padding: "13px 10px",
               },
             }}
           />
         </Grid>
       </Grid>
-      {/* <Button
-        onClick={clearFilters}
-        variant="outlined"
-        startIcon={<Clear />}
-        sx={{
-          mt: { xs: 1, md: 1.5 },
-          alignSelf: 'flex-end',
-          borderColor: AppColors.GOLD_DARK,
-          color: AppColors.GOLD_DARK,
-          '&:hover': {
-            borderColor: AppColors.GOLD_LIGHT,
-            bgcolor: `${AppColors.GOLD_DARK}10`,
-          },
-        }}
-      >
-        Clear Filters
-      </Button> */}
+      {(filters.startDate || filters.endDate || filters.status || filters.type || filters.pair || filters.userId || filters.uid || filters.email) && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+          <Button
+            className='btn-primary'
+            onClick={handleApplyDateFilter}
+            startIcon={<Search />}
+            sx={{
+              width: { xs: '100%', lg: 'auto' },
+            }}
+          >
+            Apply Filter
+          </Button>
+          <Button
+            onClick={clearFilters}
+            variant="outlined"
+            startIcon={<Clear />}
+            sx={{
+              alignSelf: 'flex-end',
+              borderColor: AppColors.GOLD_DARK,
+              color: AppColors.GOLD_DARK,
+              '&:hover': {
+                borderColor: AppColors.GOLD_LIGHT,
+                bgcolor: `${AppColors.GOLD_DARK}10`,
+              },
+              width: { xs: '100%', lg: 'auto' },
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Box>)
+      }
     </Box>
   );
 
   const renderTradeRow = (item, index) => (
-    <TableRow
-      key={item.id || index}
-      sx={{
-        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-        '&:hover': {
-          bgcolor: `${AppColors.GOLD_DARK}10`,
-        },
-      }}
-    >
-      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
+    <TableRow key={item._id || item.id || index} sx={{ '&:hover': { bgcolor: `${AppColors.HLT_LIGHT}` } }}>
+      <TableCell sx={{ color: AppColors.TXT_MAIN, fontWeight: 500 }}>{item?.user?.fullName || 'N/A'}</TableCell>
       <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.pair || 'N/A'}</TableCell>
       <TableCell>
-        <Typography sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
-          ${formatAmount(item.amount)}
-        </Typography>
+        <Chip
+          size="small"
+          icon={item.direction === 'UP' ? <ArrowUpward sx={{ fontSize: 14 }} /> : item.direction === 'DOWN' ? <ArrowDownward sx={{ fontSize: 14 }} /> : undefined}
+          label={item.direction || '—'}
+          sx={{
+            fontWeight: 600,
+            bgcolor: item.direction === 'UP' ? `${AppColors.SUCCESS}18` : item.direction === 'DOWN' ? `${AppColors.ERROR}18` : `${AppColors.HLT_NONE}30`,
+            color: item.direction === 'UP' ? AppColors.SUCCESS : item.direction === 'DOWN' ? AppColors.ERROR : AppColors.TXT_SUB,
+            border: `1px solid ${item.direction === 'UP' ? AppColors.SUCCESS : item.direction === 'DOWN' ? AppColors.ERROR : AppColors.HLT_NONE}`,
+            '& .MuiChip-icon': { color: 'inherit' },
+          }}
+        />
+      </TableCell>
+      <TableCell sx={{ color: AppColors.GOLD_DARK }}>
+        ${formatAmount(item.grossAmount ?? item.amount)}
       </TableCell>
       <TableCell>{getStatusChip(item.status)}</TableCell>
-      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
-      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.closedAt)}</TableCell>
-      <TableCell>
-        <Typography sx={{
-          color: item.status === 'WIN' ? AppColors.SUCCESS : item.status === 'LOSS' ? AppColors.ERROR : AppColors.GOLD_DARK,
-          fontWeight: 600
-        }}>
-          {item.profit ? (item.profit > 0 ? '+' : '') + formatAmount(item.profit) : 'N/A'}
-        </Typography>
+      <TableCell sx={{
+        color: item.status === 'WIN' ? AppColors.SUCCESS : item.status === 'LOSS' ? AppColors.ERROR : AppColors.TXT_SUB,
+        fontWeight: 600,
+      }}>
+        ${formatAmount(item.payout ?? item.profit ?? 0)}
+      </TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB, fontSize: '0.8rem' }}>{formatDate(item.startTime || item.createdAt)}</TableCell>
+      <TableCell sx={{ width: 48, p: 0 }}>
+        <IconButton
+          size="small"
+          onClick={() => setTradeDetailItem(item)}
+          sx={{ color: AppColors.GOLD_DARK, '&:hover': { bgcolor: `${AppColors.GOLD_DARK}15` } }}
+          aria-label="View details"
+        >
+          <Visibility fontSize="small" />
+        </IconButton>
       </TableCell>
     </TableRow>
   );
 
+  const getIncomeTypeLabel = (type) => {
+    const labels = { REFERRAL_BONUS: 'Referral Bonus', LEVEL_INCOME: 'Level Income', SALARY_INCOME: 'Salary Income' };
+    return labels[type] || type || '—';
+  };
+
   const renderIncomeRow = (item, index) => (
-    <TableRow
-      key={item.id || index}
-      sx={{
-        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-        '&:hover': {
-          bgcolor: `${AppColors.GOLD_DARK}10`,
-        },
-      }}
-    >
-      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
-      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.type || 'N/A'}</TableCell>
-      <TableCell>
-        <Typography sx={{ color: AppColors.SUCCESS, fontWeight: 600 }}>
-          +${formatAmount(item.amount)}
-        </Typography>
+    <TableRow key={item._id || item.id || index} sx={{ '&:hover': { bgcolor: `${AppColors.HLT_LIGHT}` } }}>
+      <TableCell sx={{ color: AppColors.TXT_MAIN, fontWeight: 500 }}>{item?.user?.fullName || 'N/A'}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{getIncomeTypeLabel(item.type)}</TableCell>
+      <TableCell sx={{ color: AppColors.SUCCESS }}>
+        +{formatAmount(item.amount)} {item.currency || 'USDT'}
       </TableCell>
-      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.fromUserId || 'N/A'}</TableCell>
+      <TableCell>{getStatusChip(item.status)}</TableCell>
       <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
-      <TableCell sx={{ color: AppColors.TXT_SUB }}>{item.description || 'N/A'}</TableCell>
+      <TableCell sx={{ width: 48, p: 0 }}>
+        <IconButton
+          size="small"
+          onClick={() => setIncomeDetailItem(item)}
+          sx={{ color: AppColors.GOLD_DARK, '&:hover': { bgcolor: `${AppColors.GOLD_DARK}15` } }}
+          aria-label="View details"
+        >
+          <Visibility fontSize="small" />
+        </IconButton>
+      </TableCell>
     </TableRow>
   );
 
   const renderDepositRow = (item, index) => (
-    <TableRow
-      key={item.id || index}
-      sx={{
-        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-        '&:hover': {
-          bgcolor: `${AppColors.GOLD_DARK}10`,
-        },
-      }}
-    >
-      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
-      <TableCell>
-        <Typography sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
-          ${formatAmount(item.amount)}
-        </Typography>
+    <TableRow key={item._id || item.id || index} sx={{ '&:hover': { bgcolor: `${AppColors.HLT_LIGHT}` } }}>
+      <TableCell sx={{ color: AppColors.TXT_MAIN, fontWeight: 500 }}>{item?.user?.fullName || 'N/A'}</TableCell>
+      <TableCell sx={{ color: AppColors.GOLD_DARK }}>
+        {formatAmount(item.amount)} {item.currency || 'USDT'}
       </TableCell>
-      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.chain || 'N/A'}</TableCell>
-      <TableCell>
-        <Typography sx={{ color: AppColors.TXT_SUB, fontFamily: 'monospace', fontSize: '0.875rem' }}>
-          {item.address ? `${item.address.slice(0, 8)}...${item.address.slice(-6)}` : 'N/A'}
-        </Typography>
-      </TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{item.chain || '—'}</TableCell>
       <TableCell>{getStatusChip(item.status)}</TableCell>
-      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
-      <TableCell>
-        {item.txHash ? (
-          <Typography sx={{ color: AppColors.TXT_SUB, fontFamily: 'monospace', fontSize: '0.875rem' }}>
-            {`${item.txHash.slice(0, 8)}...${item.txHash.slice(-6)}`}
-          </Typography>
-        ) : (
-          'N/A'
-        )}
+      <TableCell sx={{ color: AppColors.TXT_SUB, fontSize: '0.8rem' }}>{formatDate(item.createdAt)}</TableCell>
+      <TableCell sx={{ width: 48, p: 0 }}>
+        <IconButton
+          size="small"
+          onClick={() => setDepositDetailItem(item)}
+          sx={{ color: AppColors.GOLD_DARK, '&:hover': { bgcolor: `${AppColors.GOLD_DARK}15` } }}
+          aria-label="View details"
+        >
+          <Visibility fontSize="small" />
+        </IconButton>
       </TableCell>
     </TableRow>
   );
 
   const renderWithdrawalRow = (item, index) => (
-    <TableRow
-      key={item.id || index}
-      sx={{
-        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-        '&:hover': {
-          bgcolor: `${AppColors.GOLD_DARK}10`,
-        },
-      }}
-    >
+    <TableRow key={item.id || index}>
       <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
       <TableCell>
         <Typography sx={{ color: AppColors.ERROR, fontWeight: 600 }}>
@@ -712,30 +671,21 @@ const ManageHistoryNLogs = () => {
 
   const renderTableHeaders = () => {
     const headers = {
-      trades: ['User ID', 'Pair', 'Amount', 'Status', 'Opened', 'Closed', 'Profit/Loss'],
-      income: ['User ID', 'Type', 'Amount', 'From User', 'Date', 'Description'],
-      deposits: ['User ID', 'Amount', 'Chain', 'Address', 'Status', 'Date', 'TX Hash'],
-      withdrawals: ['User ID', 'Amount', 'Type', 'To Address', 'Status', 'Date', 'TX Hash']
+      trades: ['User', 'Pair', 'Direction', 'Amount', 'Status', 'Payout', 'Date'],
+      income: ['User', 'Type', 'Amount', 'Status', 'Date'],
+      deposits: ['User', 'Amount', 'Chain', 'Status', 'Date'],
+      withdrawals: ['FullName', 'User ID', 'Amount', 'Type', 'To Address', 'Status', 'Date', 'TX Hash']
     };
 
     return (
       <TableHead>
-        <TableRow sx={{ bgcolor: `${AppColors.GOLD_DARK}20` }}>
+        <TableRow>
           {headers[activeTab]?.map((header, index) => (
-            <TableCell
-              key={index}
-              sx={{
-                color: AppColors.GOLD_DARK,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                fontSize: '0.875rem',
-                borderBottom: `2px solid ${AppColors.GOLD_DARK}`
-              }}
-            >
-              {header}
-            </TableCell>
+            <TableCell key={index}>{header}</TableCell>
           ))}
+          {activeTab === 'trades' && <TableCell sx={{ width: 48, p: 0 }} align="center" />}
+          {activeTab === 'income' && <TableCell sx={{ width: 48, p: 0 }} align="center" />}
+          {activeTab === 'deposits' && <TableCell sx={{ width: 48, p: 0 }} align="center" />}
         </TableRow>
       </TableHead>
     );
@@ -758,28 +708,19 @@ const ManageHistoryNLogs = () => {
     );
   };
 
-  const handlePageChange = (event, value) => {
-    setPagination(prev => ({ ...prev, page: value }));
+  const handlePageChange = (event, newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage + 1 }));
   };
 
-  if (loading && data.length === 0) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '60vh',
-          bgcolor: AppColors.BG_MAIN
-        }}
-      >
-        <BTLoader />
-      </Box>
-    );
-  }
+  const handleRowsPerPageChange = (event) => {
+    const limit = parseInt(event.target.value, 10);
+    setPagination(prev => ({ ...prev, limit, page: 1 }));
+  };
+
+  const tablePaginationColSpan = { trades: 8, income: 6, deposits: 6, withdrawals: 8 }[activeTab] || 8;
 
   return (
-    <Box sx={{ bgcolor: AppColors.BG_MAIN, minHeight: '100vh' }}>
+    <Box>
       {/* MainHeader */}
       <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Box sx={{
@@ -861,55 +802,56 @@ const ManageHistoryNLogs = () => {
           backgroundColor: AppColors.BG_CARD,
           border: `1px solid ${AppColors.BG_SECONDARY}`,
           borderRadius: 3,
-          p: { xs: 1, md: 1.5 },
           height: '100%',
           background: `linear-gradient(135deg, ${AppColors.BG_CARD} 0%, ${AppColors.BG_SECONDARY} 100%)`,
         }}
       >
-        <Tabs
-          value={activeTab}
-          onChange={(e, newValue) => {
-            setActiveTab(newValue);
-            setPagination(prev => ({ ...prev, page: 1 }));
-          }}
-          sx={{
-            minHeight: "2.25rem",
-            borderBottom: `1px solid ${AppColors.BG_SECONDARY}`,
-            '& .MuiTabs-indicator': {
-              backgroundColor: AppColors.GOLD_DARK,
-            },
-            '& .MuiTab-root': {
-              color: AppColors.TXT_SUB,
+        <Box sx={{ p: { xs: 1, md: 1.5 }, borderBottom: `1px solid ${AppColors.BG_SECONDARY}` }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, newValue) => {
+              setActiveTab(newValue);
+              setPagination(prev => ({ ...prev, page: 1 }));
+              setIncomeDetailItem(null);
+              setTradeDetailItem(null);
+              setDepositDetailItem(null);
+            }}
+            sx={{
               minHeight: "2.25rem",
-              padding: { xs: '8px 8px', md: '10px 10px' },
-              fontSize: { xs: '0.75rem', md: '0.875rem' },
-              textTransform: 'none',
-              fontWeight: 500,
-              '& .MuiTab-iconWrapper': {
-                marginRight: '6px',
-                fontSize: { xs: '1rem', md: '1.125rem' },
+              borderBottom: `1px solid ${AppColors.BG_SECONDARY}`,
+              '& .MuiTabs-indicator': {
+                backgroundColor: AppColors.GOLD_DARK,
               },
-              '&.Mui-selected': {
-                color: AppColors.GOLD_DARK,
-                fontWeight: 600,
+              '& .MuiTab-root': {
+                color: AppColors.TXT_SUB,
+                minHeight: "2.25rem",
+                padding: { xs: '8px 8px', md: '10px 10px' },
+                fontSize: { xs: '0.75rem', md: '0.875rem' },
+                textTransform: 'none',
+                fontWeight: 500,
+                '& .MuiTab-iconWrapper': {
+                  marginRight: '6px',
+                  fontSize: { xs: '1rem', md: '1.125rem' },
+                },
+                '&.Mui-selected': {
+                  color: AppColors.GOLD_DARK,
+                  fontWeight: 600,
+                },
               },
-            },
-          }}
-        >
-          {tabs.map((tab) => (
-            <Tab
-              key={tab.id}
-              value={tab.id}
-              icon={tab.icon}
-              label={tab.label}
-              iconPosition="start"
-            />
-          ))}
-        </Tabs>
-
-        {/* Filters */}
-        {renderFilters()}
-
+            }}
+          >
+            {tabs.map((tab) => (
+              <Tab
+                key={tab.id}
+                value={tab.id}
+                icon={tab.icon}
+                label={tab.label}
+                iconPosition="start"
+              />
+            ))}
+          </Tabs>
+          {renderFilters()}
+        </Box>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
             <BTLoader />
@@ -926,50 +868,345 @@ const ManageHistoryNLogs = () => {
           </Box>
         ) : (
           <>
-            {/* Mobile Card View */}
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-              {data.map((item, index) => renderMobileCard(item, index))}
-            </Box>
-
-            {/* Desktop Table View */}
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-              <TableContainer>
-                <Table>
-                  {renderTableHeaders()}
-                  {renderTableBody()}
-                </Table>
-              </TableContainer>
-            </Box>
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Pagination
-                  count={pagination.totalPages}
-                  page={pagination.page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      color: AppColors.TXT_MAIN,
-                      '&.Mui-selected': {
-                        bgcolor: AppColors.GOLD_DARK,
-                        color: AppColors.BG_MAIN,
-                        '&:hover': {
-                          bgcolor: AppColors.GOLD_LIGHT,
-                        },
-                      },
-                      '&:hover': {
-                        bgcolor: `${AppColors.GOLD_DARK}20`,
-                      },
-                    },
-                  }}
-                />
+            {activeTab === 'income' && incomeSummary && (
+              <Box sx={{ px: 2, pt: 1.5, pb: 0 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5 }}>
+                  <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, fontWeight: 600 }}>Summary:</Typography>
+                  <Chip
+                    label={`Total: ${formatAmount(incomeSummary.totalIncomeAmount)} USDT`}
+                    size="small"
+                    sx={{ bgcolor: `${AppColors.GOLD_DARK}20`, color: AppColors.GOLD_DARK, fontWeight: 600 }}
+                  />
+                  {['LEVEL_INCOME', 'REFERRAL_BONUS', 'SALARY_INCOME'].map((k) => {
+                    const s = incomeSummary[k];
+                    if (!s || (s.count === 0 && !s.totalAmount)) return null;
+                    return (
+                      <Chip
+                        key={k}
+                        label={`${getIncomeTypeLabel(k)}: ${formatAmount(s.totalAmount || 0)} (${s.count})`}
+                        size="small"
+                        variant="outlined"
+                        sx={{ borderColor: AppColors.HLT_NONE, color: AppColors.TXT_SUB, fontSize: '0.75rem' }}
+                      />
+                    );
+                  })}
+                </Box>
               </Box>
             )}
+            <TableContainer component={Paper}
+              sx={{
+                boxShadow: "none",
+                maxHeight: "calc(100vh - 10em)",
+                overflowX: "auto",
+                overflowY: "auto",
+                WebkitOverflowScrolling: "touch",
+                "& .MuiTableCell-root": {
+                  py: { xs: 0.5, sm: 1 },
+                  px: { xs: 0.75, sm: 1.25 },
+                  borderBottom: `1px solid ${AppColors.HLT_NONE}30`,
+                },
+                "& .MuiTableCell-body": {
+                  minWidth: { xs: "8em", lg: "none" },
+                  maxWidth: { xs: "14em", lg: "none" },
+                },
+              }}>
+              <Table
+                stickyHeader
+                size="small"
+                sx={{
+                  background: `linear-gradient(360deg, ${AppColors.BG_SECONDARY} 0%, ${AppColors.BG_MAIN} 100%)`,
+                }}>
+                {renderTableHeaders()}
+                {renderTableBody()}
+                <TableFooter>
+                  <TableRow>
+                    <TablePagination
+                      count={pagination.total}
+                      page={pagination.page - 1}
+                      onPageChange={handlePageChange}
+                      rowsPerPage={pagination.limit}
+                      onRowsPerPageChange={handleRowsPerPageChange}
+                      rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                      colSpan={tablePaginationColSpan}
+                      sx={{
+                        borderBottom: 'none',
+                        color: AppColors.TXT_SUB,
+                        '& .MuiTablePagination-selectIcon': { color: AppColors.GOLD_DARK },
+                        '& .MuiTablePagination-select': { color: AppColors.TXT_MAIN },
+                        '& .MuiTablePagination-displayedRows': { color: AppColors.TXT_MAIN },
+                        '& .MuiIconButton-root': {
+                          color: AppColors.TXT_SUB,
+                          '&:hover': { bgcolor: `${AppColors.GOLD_DARK}20`, color: AppColors.GOLD_DARK },
+                          '&.Mui-disabled': { color: AppColors.HLT_NONE },
+                        },
+                      }}
+                    />
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </TableContainer>
           </>
         )}
       </Paper>
+
+      {/* Trade Detail Modal */}
+      <Dialog
+        open={!!tradeDetailItem}
+        onClose={() => setTradeDetailItem(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: AppColors.BG_CARD,
+            border: `1px solid ${AppColors.BG_SECONDARY}`,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: AppColors.GOLD_DARK, fontWeight: 600, borderBottom: `1px solid ${AppColors.HLT_NONE}40`, pb: 1.5 }}>
+          Trade Details
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {tradeDetailItem && (
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>User</Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <Typography sx={{ color: AppColors.TXT_MAIN }}>{tradeDetailItem?.user?.fullName || '—'}</Typography>
+                  <Typography sx={{ color: AppColors.TXT_SUB, fontSize: '0.875rem' }}>{tradeDetailItem?.user?.email || '—'}</Typography>
+                  <Typography sx={{ color: AppColors.TXT_SUB, fontSize: '0.8rem', fontFamily: 'monospace' }}>{tradeDetailItem?.user?.UID || '—'}</Typography>
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Pair</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{tradeDetailItem.pair || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Direction</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{tradeDetailItem.direction || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Gross Amount</Typography>
+                <Typography sx={{ color: AppColors.GOLD_DARK, fontWeight: 600, mt: 0.5 }}>${formatAmount(tradeDetailItem.grossAmount ?? tradeDetailItem.amount)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Fee</Typography>
+                <Typography sx={{ color: AppColors.ERROR, mt: 0.5 }}>${formatAmount(tradeDetailItem.feeAmount)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Net Amount</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>${formatAmount(tradeDetailItem.netTradeAmount)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Payout</Typography>
+                <Typography sx={{ color: tradeDetailItem.status === 'WIN' ? AppColors.SUCCESS : tradeDetailItem.status === 'LOSS' ? AppColors.ERROR : AppColors.TXT_MAIN, fontWeight: 600, mt: 0.5 }}>${formatAmount(tradeDetailItem.payout ?? tradeDetailItem.profit ?? 0)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Entry Price</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>${formatAmount(tradeDetailItem.entryPrice)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Exit Price</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>${formatAmount(tradeDetailItem.exitPrice)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Status</Typography>
+                <Box sx={{ mt: 0.5 }}>{getStatusChip(tradeDetailItem.status)}</Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Start</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(tradeDetailItem.startTime)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Expiry</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(tradeDetailItem.expiryTime)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Created</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(tradeDetailItem.createdAt)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Updated</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(tradeDetailItem.updatedAt)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>ID</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontFamily: 'monospace', fontSize: '0.75rem' }}>{tradeDetailItem._id || '—'}</Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${AppColors.HLT_NONE}40` }}>
+          <Button
+            onClick={() => setTradeDetailItem(null)}
+            sx={{ color: AppColors.GOLD_DARK, '&:hover': { bgcolor: `${AppColors.GOLD_DARK}15` } }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Income Detail Modal */}
+      <Dialog
+        open={!!incomeDetailItem}
+        onClose={() => setIncomeDetailItem(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: AppColors.BG_CARD,
+            border: `1px solid ${AppColors.BG_SECONDARY}`,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: AppColors.GOLD_DARK, fontWeight: 600, borderBottom: `1px solid ${AppColors.HLT_NONE}40`, pb: 1.5 }}>
+          Income Details
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {incomeDetailItem && (
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>User</Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <Typography sx={{ color: AppColors.TXT_MAIN }}>{incomeDetailItem?.user?.fullName || '—'}</Typography>
+                  <Typography sx={{ color: AppColors.TXT_SUB, fontSize: '0.875rem' }}>{incomeDetailItem?.user?.email || '—'}</Typography>
+                  <Typography sx={{ color: AppColors.TXT_SUB, fontSize: '0.8rem', fontFamily: 'monospace' }}>{incomeDetailItem?.user?.UID || '—'}</Typography>
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Type</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{getIncomeTypeLabel(incomeDetailItem.type)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Amount</Typography>
+                <Typography sx={{ color: AppColors.SUCCESS, fontWeight: 600, mt: 0.5 }}>+{formatAmount(incomeDetailItem.amount)} {incomeDetailItem.currency || 'USDT'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Chain</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{incomeDetailItem.chain || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Currency</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{incomeDetailItem.currency || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Status</Typography>
+                <Box sx={{ mt: 0.5 }}>{getStatusChip(incomeDetailItem.status)}</Box>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Wallet Address</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5, fontFamily: 'monospace', fontSize: '0.875rem', wordBreak: 'break-all' }}>{incomeDetailItem.walletAddress || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Transaction Hash</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5, fontFamily: 'monospace', fontSize: '0.875rem', wordBreak: 'break-all' }}>{incomeDetailItem.txHash || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Created</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(incomeDetailItem.createdAt)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Updated</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(incomeDetailItem.updatedAt)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>ID</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontFamily: 'monospace', fontSize: '0.75rem' }}>{incomeDetailItem._id || '—'}</Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${AppColors.HLT_NONE}40` }}>
+          <Button
+            onClick={() => setIncomeDetailItem(null)}
+            sx={{ color: AppColors.GOLD_DARK, '&:hover': { bgcolor: `${AppColors.GOLD_DARK}15` } }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Deposit Detail Modal */}
+      <Dialog
+        open={!!depositDetailItem}
+        onClose={() => setDepositDetailItem(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: AppColors.BG_CARD,
+            border: `1px solid ${AppColors.BG_SECONDARY}`,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: AppColors.GOLD_DARK, fontWeight: 600, borderBottom: `1px solid ${AppColors.HLT_NONE}40`, pb: 1.5 }}>
+          Deposit Details
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {depositDetailItem && (
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>User</Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <Typography sx={{ color: AppColors.TXT_MAIN }}>{depositDetailItem?.user?.fullName || '—'}</Typography>
+                  <Typography sx={{ color: AppColors.TXT_SUB, fontSize: '0.875rem' }}>{depositDetailItem?.user?.email || '—'}</Typography>
+                  <Typography sx={{ color: AppColors.TXT_SUB, fontSize: '0.8rem', fontFamily: 'monospace' }}>{depositDetailItem?.user?.UID || '—'}</Typography>
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Type</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{depositDetailItem.type || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Amount</Typography>
+                <Typography sx={{ color: AppColors.GOLD_DARK, fontWeight: 600, mt: 0.5 }}>{formatAmount(depositDetailItem.amount)} {depositDetailItem.currency || 'USDT'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Chain</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{depositDetailItem.chain || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Currency</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5 }}>{depositDetailItem.currency || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Status</Typography>
+                <Box sx={{ mt: 0.5 }}>{getStatusChip(depositDetailItem.status)}</Box>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Wallet Address</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5, fontFamily: 'monospace', fontSize: '0.875rem', wordBreak: 'break-all' }}>{depositDetailItem.walletAddress || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Transaction Hash</Typography>
+                <Typography sx={{ color: AppColors.TXT_MAIN, mt: 0.5, fontFamily: 'monospace', fontSize: '0.875rem', wordBreak: 'break-all' }}>{depositDetailItem.txHash || '—'}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Created</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(depositDetailItem.createdAt)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>Updated</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontSize: '0.875rem' }}>{formatDate(depositDetailItem.updatedAt)}</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>ID</Typography>
+                <Typography sx={{ color: AppColors.TXT_SUB, mt: 0.5, fontFamily: 'monospace', fontSize: '0.75rem' }}>{depositDetailItem._id || '—'}</Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${AppColors.HLT_NONE}40` }}>
+          <Button
+            onClick={() => setDepositDetailItem(null)}
+            sx={{ color: AppColors.GOLD_DARK, '&:hover': { bgcolor: `${AppColors.GOLD_DARK}15` } }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

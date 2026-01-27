@@ -1,26 +1,27 @@
 import React, { useState } from "react";
+import { AppColors } from "../../constant/appColors";
 import { useNavigate } from "react-router-dom";
 import { Box, IconButton, Typography, Avatar, useMediaQuery, Menu, MenuItem, ListItemIcon } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useAuth } from "../../hooks/useAuth";
-import MenuIcon from "@mui/icons-material/Menu";
-import { AppColors } from "../../constant/appColors";
-import WidgetsOutlined from "@mui/icons-material/WidgetsOutlined";
 import { useAuth2 } from "../../hooks/useAuth2";
+import MenuIcon from "@mui/icons-material/Menu";
+import WidgetsOutlined from "@mui/icons-material/WidgetsOutlined";
 import BebitLogo from "../../assets/svg/Bebit.svg";
 import TradeGameIcon from "../../assets/images/tradeGame.png";
 import NetworkGameIcon from "../../assets/images/networkGame.png";
 import Logout from "@mui/icons-material/Logout";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const MainHeader = ({ onToggleSidebar }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { isLoggedIn, clear, setIsSecondGame, isSecondGame } = useAuth();
-  const { isLoggedIn: isLoggedIn2, clear: clear2 } = useAuth2();
+  const { clear: clear2 } = useAuth2();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const [openWidgets, setOpenWidgets] = useState(false);
   const [anchorElWidgets, setAnchorElWidgets] = useState(null);
@@ -29,7 +30,8 @@ const MainHeader = ({ onToggleSidebar }) => {
 
   const handleLogout = () => {
     clear();
-    window.location.href = "/login";
+    clear2();
+    navigate(isSecondGame ? "/network/login" : "/trade/login");
   };
 
   return (
@@ -179,7 +181,7 @@ const MainHeader = ({ onToggleSidebar }) => {
                     </ListItemIcon>
                     Profile
                   </MenuItem>
-                  <MenuItem onClick={handleLogout}>
+                  <MenuItem onClick={() => setLogoutModalOpen(true)}>
                     <ListItemIcon>
                       <Logout fontSize="small" />
                     </ListItemIcon>
@@ -341,7 +343,7 @@ const MainHeader = ({ onToggleSidebar }) => {
                   onClick={() => {
                     setIsSecondGame(true);
                     navigate("/network/dashboard");
-                    }}
+                  }}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -432,6 +434,7 @@ const MainHeader = ({ onToggleSidebar }) => {
           </Box>
         </Box>
       </Box>
+      <ConfirmationModal open={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} onConfirm={handleLogout} title="Logout" description="Are you sure you want to logout?" />
     </Box>
   );
 };

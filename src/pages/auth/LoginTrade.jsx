@@ -21,6 +21,7 @@ import useSnackbar from "../../hooks/useSnackbar";
 import TextInput from "../../components/input/textInput";
 import Cookies from "js-cookie";
 import BtParalex from '../../components/heroBetBit/BtParalex';
+import { useAuth } from "../../hooks/useAuth";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -36,6 +37,7 @@ export default function LoginTrade() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
+  const { setUser } = useAuth();
 
   const formik = useFormik({
     initialValues: {
@@ -56,6 +58,7 @@ export default function LoginTrade() {
 
         if (Data?.token) {
           Cookies.set("token", Data.token);
+          setUser(Data.user, Data.token);
           showSnackbar(message || "Login successful", "success");
           navigate("/");
         }
@@ -81,20 +84,19 @@ export default function LoginTrade() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          py: { xs: 2, sm: 3, md: 4 },
           px: { xs: 1.5, sm: 2, md: 3 },
         }}
       >
         <Container
-          maxWidth="sm"
+          maxWidth="lg"
           sx={{
             width: "100%",
-            maxWidth: { xs: "100%", sm: "500px", md: "600px" },
+            maxWidth: { xs: "100%", lg: "600px" },
           }}
         >
           <Box
             sx={{
-              p: { xs: 0, sm: 3, md: 4 },
+              p: { xs: 0, lg: 4 },
             }}
           >
             <Box sx={{ mb: { xs: 3, sm: 4 }, textAlign: "center" }}>
@@ -106,7 +108,7 @@ export default function LoginTrade() {
                   fontWeight: 600,
                 }}
               >
-                Trade Login
+                Admin Trade Login
               </Typography>
               <Typography
                 variant="body2"
@@ -153,12 +155,11 @@ export default function LoginTrade() {
 
               <Button
                 type="submit"
-                fullWidth
                 disabled={loading}
                 className="btn-primary"
                 sx={{
                   mb: { xs: 1, sm: 3 },
-                  py: { xs: 1.5, sm: 1.75 },
+                  py: { xs: 1, lg: 1.5 },
                 }}
               >
                 {loading ? "Signing in..." : "Sign In"}

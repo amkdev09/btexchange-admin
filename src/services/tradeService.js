@@ -25,22 +25,22 @@ const tradeService = {
 
   // History & Logs Management
   getTradesHistory: async (params = {}) => {
-    const response = await api.get('/trades', { params });
+    const response = await api.get(`${BASE_URL}/trades`, { params });
     return response.data;
   },
 
   getIncomeHistory: async (params = {}) => {
-    const response = await api.get('/income/history', { params });
+    const response = await api.get(`${BASE_URL}/income/history`, { params });
     return response.data;
   },
 
   getDepositsHistory: async (params = {}) => {
-    const response = await api.get('/deposits/history', { params });
+    const response = await api.get(`${BASE_URL}/deposits/history`, { params });
     return response.data;
   },
 
   getWithdrawalsHistory: async (params = {}) => {
-    const response = await api.get('/withdrawals/history', { params });
+    const response = await api.get(`${BASE_URL}/withdrawals/history`, { params });
     return response.data;
   },
   getAddressBalance: async (address, chain) => {
@@ -52,7 +52,7 @@ const tradeService = {
 
   // Get all deposit balances for a specific chain
   getChainBalances: async (chain) => {
-    const response = await api.get(`${BASE_URL}/chain/balances`, {
+    const response = await api.get(`${BASE_URL}/funds/chain/balances`, {
       params: { chain }
     });
     return response.data;
