@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import MainHeader from "./header/mainHeader";
-import Sidebar from "./sidebar/mainSidebar";
+import MainHeader from "./header/MainHeader";
+import Sidebar from "./sidebar/MainSidebar";
 import { AppColors } from "../constant/appColors";
 
 const Layout = (props) => {
