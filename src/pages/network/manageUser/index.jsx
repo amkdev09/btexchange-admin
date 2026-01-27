@@ -238,7 +238,7 @@ const NetworkManageUsers = () => {
 
   return (
     <Box>
-      {/* Header */}
+      {/* MainHeader */}
       <Box sx={{ mb: { xs: 1, md: 2 } }}>
         <Typography
           variant="h4"
@@ -569,7 +569,7 @@ const NetworkManageUsers = () => {
           }}
         >
           <CardContent sx={{ p: { xs: 1, md: 1.5 } }}>
-            {/* Modal Header */}
+            {/* Modal MainHeader */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography
                 variant="h6"

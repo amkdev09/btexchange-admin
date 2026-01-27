@@ -91,7 +91,7 @@ const NetworkDashboard = () => {
 
   return (
     <Box>
-      {/* Header */}
+      {/* MainHeader */}
       <Box sx={{ mb: { xs: 2, md: 4 } }}>
         <Typography
           variant="h4"

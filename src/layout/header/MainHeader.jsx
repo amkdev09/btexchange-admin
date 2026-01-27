@@ -12,7 +12,7 @@ import TradeGameIcon from "../../assets/images/tradeGame.png";
 import NetworkGameIcon from "../../assets/images/networkGame.png";
 import Logout from "@mui/icons-material/Logout";
 
-const Header = ({ onToggleSidebar }) => {
+const MainHeader = ({ onToggleSidebar }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -436,4 +436,4 @@ const Header = ({ onToggleSidebar }) => {
   );
 };
 
-export default Header;
+export default MainHeader;

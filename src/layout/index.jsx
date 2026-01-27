@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import Header from "./header/mainHeader";
+import MainHeader from "./header/mainHeader";
 import Sidebar from "./sidebar/mainSidebar";
 import { AppColors } from "../constant/appColors";
 
@@ -28,7 +28,7 @@ const Layout = (props) => {
         color: theme.palette.text.primary,
       }}
     >
-      <Header onToggleSidebar={handleToggleSidebar} />
+      <MainHeader onToggleSidebar={handleToggleSidebar} />
       <Box sx={{ display: "flex", flex: 1, pt: 8 }}>
         <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
         <Box

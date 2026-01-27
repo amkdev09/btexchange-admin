@@ -98,7 +98,7 @@ const AdminDashboard = () => {
 
   return (
     <Box >
-      {/* Header */}
+      {/* MainHeader */}
       <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Typography
           variant="h4"

@@ -550,7 +550,7 @@ const ManageFunds = () => {
 
   return (
     <Box sx={{ bgcolor: AppColors.BG_MAIN, minHeight: "100vh" }}>
-      {/* Header */}
+      {/* MainHeader */}
       <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Box sx={{
           display: 'flex',

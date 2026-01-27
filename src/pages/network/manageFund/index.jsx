@@ -561,7 +561,7 @@ const NetworkManageFunds = () => {
 
   return (
     <Box sx={{ bgcolor: AppColors.BG_MAIN }}>
-      {/* Header */}
+      {/* MainHeader */}
       <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Box sx={{
           display: 'flex',
