@@ -21,7 +21,7 @@ import useSnackbar from "../../hooks/useSnackbar";
 import TextInput from "../../components/input/textInput";
 import Cookies from "js-cookie";
 import BtParalex from "../../components/heroBetBit/BtParalex";
-import MainHeader from "../../layout/header/mainHeader.jsx"
+import MainHeader from "../../layout/header/mainHeader"
 
 const validationSchema = Yup.object({
   email: Yup.string()
