@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import Header from "./header/MainHeader";
+import Header from "./header/mainHeader";
 import Sidebar from "./sidebar/MainSidebar";
 import { AppColors } from "../constant/appColors";
 

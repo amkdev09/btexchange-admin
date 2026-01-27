@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
@@ -21,6 +21,7 @@ import useSnackbar from "../../hooks/useSnackbar";
 import TextInput from "../../components/input/textInput";
 import Cookies from "js-cookie";
 import BtParalex from "../../components/heroBetBit/BtParalex";
+import Header from "../../layout/header/mainHeader"
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -54,7 +55,7 @@ export default function NetworkAdminLogin() {
 
         const { data, message } = response || {};
 
-        if (data?.token) {          
+        if (data?.token) {
           Cookies.set("token2", data.token);
           showSnackbar(message || "Login successful", "success");
           navigate("/network/dashboard");
@@ -75,6 +76,7 @@ export default function NetworkAdminLogin() {
 
   return (
     <BtParalex>
+      <Header />
       <Box
         sx={{
           minHeight: "100vh",

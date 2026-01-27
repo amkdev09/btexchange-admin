@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import BtParalex from "../../components/heroBetBit/BtParalex";
-import MainHeader from "../../layout/header/mianHeader";
+import Header from "../../layout/header/mianHeader";
 import TextInput from "../../components/input/textInput";
 import { AppColors } from "../../constant/appColors";
 import userService from "../../services/secondGameServices/userService";
@@ -121,7 +121,7 @@ export default function ForgotPassword2() {
 
   return (
     <BtParalex>
-      <MainHeader />
+      <Header />
       <Box
         sx={{
           minHeight: "100vh",

@@ -21,6 +21,7 @@ import useSnackbar from "../../hooks/useSnackbar";
 import TextInput from "../../components/input/textInput";
 import Cookies from "js-cookie";
 import BtParalex from '../../components/heroBetBit/BtParalex';
+import Header from "../../layout/header/mainHeader"
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -75,6 +76,7 @@ export default function LoginTrade() {
 
   return (
     <BtParalex>
+      <Header />
       <Box
         sx={{
           minHeight: "100vh",
