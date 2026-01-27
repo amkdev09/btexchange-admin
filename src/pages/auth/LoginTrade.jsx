@@ -75,7 +75,6 @@ export default function LoginTrade() {
 
   return (
     <BtParalex>
-      <MainHeader />
       <Box
         sx={{
           minHeight: "100vh",
