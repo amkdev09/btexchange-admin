@@ -193,7 +193,7 @@ const ManageFunds = () => {
               <MetricCard
                 title={`${chain} Balance`}
                 value={formatCurrency(getTotalBalance(chain))}
-                icon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20, fill: AppColors.GOLD_DARK }} />}
+                icon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20 }} />}
                 trend="positive"
                 subtitle={`${Object.keys(chainBalances[chain]).length} addresses`}
               />
@@ -315,7 +315,7 @@ const ManageFunds = () => {
                   onClick={() => setActiveChain(chain)}
                   fullWidth
                   variant={isActive ? "contained" : "outlined"}
-                  startIcon={<span style={{ fontSize: 16 }}>{config.icon}</span>}
+                  startIcon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20, filter: isActive ? 'brightness(0)' : 'none' }} />}
                   sx={{
                     bgcolor: isActive ? AppColors.GOLD_DARK : 'transparent',
                     borderColor: AppColors.GOLD_DARK,
@@ -550,7 +550,7 @@ const ManageFunds = () => {
 
   return (
     <Box sx={{ bgcolor: AppColors.BG_MAIN, minHeight: "100vh" }}>
-      {/* MainHeader */}
+      {/* Header */}
       <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Box sx={{
           display: 'flex',
@@ -623,6 +623,7 @@ const ManageFunds = () => {
         value={activeTab}
         onChange={(e, newValue) => setActiveTab(newValue)}
         sx={{
+          minHeight: "2.25rem",
           bgcolor: AppColors.BG_CARD,
           border: `1px solid ${AppColors.BG_SECONDARY}`,
           borderRadius: 3,
@@ -631,8 +632,11 @@ const ManageFunds = () => {
             backgroundColor: AppColors.GOLD_DARK,
           },
           '& .MuiTab-root': {
-            px: { xs: 1, md: 1.5 },
-            py: 0,
+            minHeight: "2.25rem",
+            padding: { xs: '8px 8px', md: '10px 10px' },
+            fontSize: { xs: '0.75rem', md: '0.875rem' },
+            textTransform: 'none',
+            fontWeight: 500,
             color: AppColors.TXT_SUB,
             '&.Mui-selected': {
               color: AppColors.GOLD_DARK,

@@ -206,7 +206,7 @@ const NetworkManageFunds = () => {
               <MetricCard
                 title={`${chain} Balance`}
                 value={formatCurrency(getTotalBalance(chain))}
-                icon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20, fill: AppColors.GOLD_DARK }} />}
+                icon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20 }} />}
                 trend="positive"
                 subtitle={`${Object.keys(chainBalances[chain] || {}).length} addresses`}
               />
@@ -326,7 +326,7 @@ const NetworkManageFunds = () => {
                   onClick={() => setActiveChain(chain)}
                   fullWidth
                   variant={isActive ? "contained" : "outlined"}
-                  startIcon={<span style={{ fontSize: 16 }}>{config.icon}</span>}
+                  startIcon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20, filter: isActive ? 'brightness(0)' : 'none' }} />}
                   sx={{
                     bgcolor: isActive ? AppColors.GOLD_DARK : 'transparent',
                     borderColor: AppColors.GOLD_DARK,

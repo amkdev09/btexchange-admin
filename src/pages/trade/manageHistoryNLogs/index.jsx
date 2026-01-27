@@ -369,10 +369,8 @@ const ManageHistoryNLogs = () => {
   };
 
   const renderFilters = () => (
-    <DashboardCard
-      title="Filters"
-      subtitle="Refine your search criteria"
-      sx={{ mb: { xs: 1, md: 1.5 } }}
+    <Box
+      sx={{ mb: { xs: 1, md: 1.5 }, borderBottom: `1px solid ${AppColors.BG_SECONDARY}`, py: { xs: 1, md: 1.5 } }}
     >
       <Grid container spacing={{ xs: 1, md: 1.5 }}>
         <Grid size={{ xs: 6, md: 4 }}>
@@ -383,13 +381,33 @@ const ManageHistoryNLogs = () => {
             variant="outlined"
             value={searchTerm}
             onChange={handleSearch}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 48, // consistent height
+                alignItems: "center",
+              },
+              "& .MuiOutlinedInput-input": {
+                padding: "12px 10px", // proper spacing
+              },
+            }}
           />
         </Grid>
 
         {activeTab === 'trades' && (
           <>
             <Grid size={{ xs: 6, sm: 6, md: 2 }}>
-              <FormControl fullWidth>
+              <FormControl fullWidth sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 48, // consistent height
+                  alignItems: "center",
+                },
+                "& .MuiOutlinedInput-input": {
+                  padding: "12px 10px", // proper spacing
+                },
+                "& .MuiInputBase-root": {
+                  bgcolor: "none",
+                },
+              }} >
                 <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
                   Status
                 </InputLabel>
@@ -398,11 +416,7 @@ const ManageHistoryNLogs = () => {
                   onChange={(e) => handleFilterChange('status', e.target.value)}
                   label="Status"
                   sx={{
-                    bgcolor: AppColors.BG_SECONDARY,
                     color: AppColors.TXT_MAIN,
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: AppColors.BG_SECONDARY,
-                    },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: AppColors.GOLD_DARK,
                     },
@@ -429,6 +443,15 @@ const ManageHistoryNLogs = () => {
                 value={filters.pair}
                 onChange={(e) => handleFilterChange('pair', e.target.value)}
                 fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 48, // consistent height
+                    alignItems: "center",
+                  },
+                  "& .MuiOutlinedInput-input": {
+                    padding: "12px 10px", // proper spacing
+                  },
+                }}
               />
             </Grid>
           </>
@@ -436,7 +459,15 @@ const ManageHistoryNLogs = () => {
 
         {activeTab === 'income' && (
           <Grid size={{ xs: 6, sm: 6, md: 2 }}>
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 48, // consistent height
+                alignItems: "center",
+              },
+              "& .MuiOutlinedInput-input": {
+                padding: "12px 10px", // proper spacing
+              },
+            }}>
               <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
                 Income Type
               </InputLabel>
@@ -444,22 +475,6 @@ const ManageHistoryNLogs = () => {
                 value={filters.type}
                 onChange={(e) => handleFilterChange('type', e.target.value)}
                 label="Income Type"
-                sx={{
-                  bgcolor: AppColors.BG_SECONDARY,
-                  color: AppColors.TXT_MAIN,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.BG_SECONDARY,
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '& .MuiSvgIcon-root': {
-                    color: AppColors.TXT_SUB,
-                  },
-                }}
               >
                 <MenuItem value="">All Types</MenuItem>
                 <MenuItem value="REFERRAL_BONUS">Referral Bonus</MenuItem>
@@ -471,31 +486,22 @@ const ManageHistoryNLogs = () => {
 
         {(activeTab === 'deposits' || activeTab === 'withdrawals') && (
           <Grid size={{ xs: 6, sm: 6, md: 2 }}>
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 48, // consistent height
+                alignItems: "center",
+              },
+              "& .MuiOutlinedInput-input": {
+                padding: "12px 10px", // proper spacing
+              }
+            }}>
               <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
                 Status
               </InputLabel>
               <Select
                 value={filters.status}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
-                label="Status"
-                sx={{
-                  bgcolor: AppColors.BG_SECONDARY,
-                  color: AppColors.TXT_MAIN,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.BG_SECONDARY,
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '& .MuiSvgIcon-root': {
-                    color: AppColors.TXT_SUB,
-                  },
-                }}
-              >
+                label="Status">
                 <MenuItem value="">All Status</MenuItem>
                 <MenuItem value="SUCCESS">Success</MenuItem>
                 <MenuItem value="PENDING">Pending</MenuItem>
@@ -507,7 +513,15 @@ const ManageHistoryNLogs = () => {
 
         {activeTab === 'withdrawals' && (
           <Grid size={{ xs: 6, sm: 6, md: 2 }}>
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 48, // consistent height
+                alignItems: "center",
+              },
+              "& .MuiOutlinedInput-input": {
+                padding: "12px 10px", // proper spacing
+              },
+            }}>
               <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
                 Withdrawal Type
               </InputLabel>
@@ -515,22 +529,6 @@ const ManageHistoryNLogs = () => {
                 value={filters.type}
                 onChange={(e) => handleFilterChange('type', e.target.value)}
                 label="Withdrawal Type"
-                sx={{
-                  bgcolor: AppColors.BG_SECONDARY,
-                  color: AppColors.TXT_MAIN,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.BG_SECONDARY,
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '& .MuiSvgIcon-root': {
-                    color: AppColors.TXT_SUB,
-                  },
-                }}
               >
                 <MenuItem value="">All Types</MenuItem>
                 <MenuItem value="WITHDRAW_WINNINGS">Withdraw Winnings</MenuItem>
@@ -545,6 +543,11 @@ const ManageHistoryNLogs = () => {
             label="Start Date"
             value={filters.startDate}
             onChange={(newValue) => handleFilterChange('startDate', newValue)}
+            sx={{
+              "& .MuiPickersSectionList-root": {
+                padding: "13px 10px", // proper spacing
+              },
+            }}
           />
         </Grid>
 
@@ -553,10 +556,15 @@ const ManageHistoryNLogs = () => {
             label="End Date"
             value={filters.endDate}
             onChange={(newValue) => handleFilterChange('endDate', newValue)}
+            sx={{
+              "& .MuiPickersSectionList-root": {
+                padding: "13px 10px", // proper spacing
+              },
+            }}
           />
         </Grid>
       </Grid>
-      <Button
+      {/* <Button
         onClick={clearFilters}
         variant="outlined"
         startIcon={<Clear />}
@@ -572,8 +580,8 @@ const ManageHistoryNLogs = () => {
         }}
       >
         Clear Filters
-      </Button>
-    </DashboardCard>
+      </Button> */}
+    </Box>
   );
 
   const renderTradeRow = (item, index) => (
@@ -847,59 +855,61 @@ const ManageHistoryNLogs = () => {
           </Box>
         </Box>
       </Box>
-
-      <Tabs
-        value={activeTab}
-        onChange={(e, newValue) => {
-          setActiveTab(newValue);
-          setPagination(prev => ({ ...prev, page: 1 }));
-        }}
+      <Paper
+        elevation={0}
         sx={{
-          bgcolor: AppColors.BG_CARD,
+          backgroundColor: AppColors.BG_CARD,
           border: `1px solid ${AppColors.BG_SECONDARY}`,
           borderRadius: 3,
-          mb: { xs: 1, md: 1.5 },
-          minHeight: 'auto',
-          '& .MuiTabs-indicator': {
-            backgroundColor: AppColors.GOLD_DARK,
-          },
-          '& .MuiTab-root': {
-            color: AppColors.TXT_SUB,
-            minHeight: 'auto',
-            padding: { xs: '8px 12px', md: '10px 16px' },
-            fontSize: { xs: '0.75rem', md: '0.875rem' },
-            textTransform: 'none',
-            fontWeight: 500,
-            '& .MuiTab-iconWrapper': {
-              marginRight: '10px',
-              fontSize: { xs: '1rem', md: '1.125rem' },
-            },
-            '&.Mui-selected': {
-              color: AppColors.GOLD_DARK,
-              fontWeight: 600,
-            },
-          },
+          p: { xs: 1, md: 1.5 },
+          height: '100%',
+          background: `linear-gradient(135deg, ${AppColors.BG_CARD} 0%, ${AppColors.BG_SECONDARY} 100%)`,
         }}
       >
-        {tabs.map((tab) => (
-          <Tab
-            key={tab.id}
-            value={tab.id}
-            icon={tab.icon}
-            label={tab.label}
-            iconPosition="start"
-          />
-        ))}
-      </Tabs>
+        <Tabs
+          value={activeTab}
+          onChange={(e, newValue) => {
+            setActiveTab(newValue);
+            setPagination(prev => ({ ...prev, page: 1 }));
+          }}
+          sx={{
+            minHeight: "2.25rem",
+            borderBottom: `1px solid ${AppColors.BG_SECONDARY}`,
+            '& .MuiTabs-indicator': {
+              backgroundColor: AppColors.GOLD_DARK,
+            },
+            '& .MuiTab-root': {
+              color: AppColors.TXT_SUB,
+              minHeight: "2.25rem",
+              padding: { xs: '8px 8px', md: '10px 10px' },
+              fontSize: { xs: '0.75rem', md: '0.875rem' },
+              textTransform: 'none',
+              fontWeight: 500,
+              '& .MuiTab-iconWrapper': {
+                marginRight: '6px',
+                fontSize: { xs: '1rem', md: '1.125rem' },
+              },
+              '&.Mui-selected': {
+                color: AppColors.GOLD_DARK,
+                fontWeight: 600,
+              },
+            },
+          }}
+        >
+          {tabs.map((tab) => (
+            <Tab
+              key={tab.id}
+              value={tab.id}
+              icon={tab.icon}
+              label={tab.label}
+              iconPosition="start"
+            />
+          ))}
+        </Tabs>
 
-      {/* Filters */}
-      {renderFilters()}
+        {/* Filters */}
+        {renderFilters()}
 
-      {/* Data Display */}
-      <DashboardCard
-        title={`${tabs.find(t => t.id === activeTab)?.label}`}
-        subtitle={`Showing ${data.length} of ${pagination.total} records`}
-      >
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
             <BTLoader />
@@ -959,50 +969,9 @@ const ManageHistoryNLogs = () => {
             )}
           </>
         )}
-      </DashboardCard>
+      </Paper>
     </Box>
   );
 };
-
-// Reusable Dashboard Card Component
-const DashboardCard = ({ title, subtitle, children, sx = {} }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      backgroundColor: AppColors.BG_CARD,
-      border: `1px solid ${AppColors.BG_SECONDARY}`,
-      borderRadius: 3,
-      p: { xs: 1, md: 1.5 },
-      height: '100%',
-      background: `linear-gradient(135deg, ${AppColors.BG_CARD} 0%, ${AppColors.BG_SECONDARY} 100%)`,
-      ...sx
-    }}
-  >
-    <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
-      <Typography
-        variant="h6"
-        sx={{
-          color: AppColors.TXT_MAIN,
-          fontWeight: 600,
-          mb: { xs: 0.5, md: 1 },
-        }}
-      >
-        {title}
-      </Typography>
-      {subtitle && (
-        <Typography
-          variant="body2"
-          sx={{
-            color: AppColors.TXT_SUB,
-            fontSize: '0.875rem',
-          }}
-        >
-          {subtitle}
-        </Typography>
-      )}
-    </Box>
-    {children}
-  </Paper>
-);
 
 export default ManageHistoryNLogs;
