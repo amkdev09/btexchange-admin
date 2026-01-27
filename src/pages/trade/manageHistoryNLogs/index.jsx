@@ -1,8 +1,43 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Typography,
+  Box,
+  Grid,
+  Paper,
+  TextField,
+  Button,
+  Tabs,
+  Tab,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Pagination,
+  Card,
+  CardContent,
+} from '@mui/material';
+import {
+  TrendingUp,
+  ArrowDownward,
+  ArrowUpward,
+  GetApp,
+  Clear,
+  Search,
+  History,
+  ShowChart,
+} from '@mui/icons-material';
 import tradeService from '../../../services/tradeService';
 import { AppColors } from '../../../constant/appColors';
 import BTLoader from '../../../components/Loader';
-import './HistoryLogs.scss';
+import dayjs from "dayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 const ManageHistoryNLogs = () => {
   const [activeTab, setActiveTab] = useState('trades');
@@ -21,32 +56,22 @@ const ManageHistoryNLogs = () => {
     status: '',
     type: '',
     pair: '',
-    startDate: '',
-    endDate: ''
+    startDate: dayjs(),
+    endDate: dayjs()
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 480);
   const [exportLoading, setExportLoading] = useState(false);
 
   const tabs = [
-    { id: 'trades', label: 'Trades History', icon: '📈' },
-    { id: 'income', label: 'Income History', icon: '💰' },
-    { id: 'deposits', label: 'Deposits History', icon: '⬇️' },
-    { id: 'withdrawals', label: 'Withdrawals History', icon: '⬆️' }
+    { id: 'trades', label: 'Trades History', icon: <ShowChart /> },
+    { id: 'income', label: 'Income History', icon: <TrendingUp /> },
+    { id: 'deposits', label: 'Deposits History', icon: <ArrowDownward /> },
+    { id: 'withdrawals', label: 'Withdrawals History', icon: <ArrowUpward /> }
   ];
 
   useEffect(() => {
     loadHistoryData();
   }, [activeTab, pagination.page, filters]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth <= 480);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const loadHistoryData = async () => {
     setLoading(true);
@@ -212,33 +237,33 @@ const ManageHistoryNLogs = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusColors = {
-      WIN: AppColors.SUCCESS,
-      LOSS: AppColors.ERROR,
-      OPEN: AppColors.GOLD_DARK,
-      SUCCESS: AppColors.SUCCESS,
-      PENDING: AppColors.GOLD_DARK,
-      FAILED: AppColors.ERROR,
-      COMPLETED: AppColors.SUCCESS,
-      PROCESSING: AppColors.GOLD_DARK
+  const getStatusChip = (status) => {
+    const statusConfig = {
+      WIN: { color: 'success', label: 'WIN' },
+      LOSS: { color: 'error', label: 'LOSS' },
+      OPEN: { color: 'warning', label: 'OPEN' },
+      SUCCESS: { color: 'success', label: 'Success' },
+      PENDING: { color: 'warning', label: 'Pending' },
+      FAILED: { color: 'error', label: 'Failed' },
+      COMPLETED: { color: 'success', label: 'Completed' },
+      PROCESSING: { color: 'warning', label: 'Processing' }
     };
 
+    const config = statusConfig[status] || { color: 'default', label: status };
+
     return (
-      <span
-        className="status-badge"
-        style={{
-          padding: '4px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: '600',
-          backgroundColor: `${statusColors[status] || AppColors.HLT_NONE}20`,
-          color: statusColors[status] || AppColors.HLT_NONE,
-          border: `1px solid ${statusColors[status] || AppColors.HLT_NONE}40`
+      <Chip
+        label={config.label}
+        size="small"
+        color={config.color}
+        sx={{
+          fontWeight: 600,
+          fontSize: '0.75rem',
+          '& .MuiChip-label': {
+            px: 1.5
+          }
         }}
-      >
-        {status}
-      </span>
+      />
     );
   };
 
@@ -249,9 +274,9 @@ const ManageHistoryNLogs = () => {
         status: item.status,
         fields: [
           { label: 'Pair', value: item.pair || 'N/A' },
-          { label: 'Amount', value: `$${formatAmount(item.amount)}` },
+          { label: 'Amount', value: `$${formatAmount(item.amount)}`, highlight: true },
           { label: 'Opened', value: formatDate(item.createdAt) },
-          { label: 'Profit/Loss', value: item.profit ? (item.profit > 0 ? '+' : '') + formatAmount(item.profit) : 'N/A' }
+          { label: 'Profit/Loss', value: item.profit ? (item.profit > 0 ? '+' : '') + formatAmount(item.profit) : 'N/A', highlight: true, profit: item.profit }
         ]
       },
       income: {
@@ -259,7 +284,7 @@ const ManageHistoryNLogs = () => {
         status: 'SUCCESS',
         fields: [
           { label: 'Type', value: item.type || 'N/A' },
-          { label: 'Amount', value: `+$${formatAmount(item.amount)}` },
+          { label: 'Amount', value: `+$${formatAmount(item.amount)}`, highlight: true, positive: true },
           { label: 'From User', value: item.fromUserId || 'N/A' },
           { label: 'Date', value: formatDate(item.createdAt) }
         ]
@@ -268,7 +293,7 @@ const ManageHistoryNLogs = () => {
         id: item.userId || 'N/A',
         status: item.status,
         fields: [
-          { label: 'Amount', value: `$${formatAmount(item.amount)}` },
+          { label: 'Amount', value: `$${formatAmount(item.amount)}`, highlight: true },
           { label: 'Chain', value: item.chain || 'N/A' },
           { label: 'Date', value: formatDate(item.createdAt) },
           { label: 'TX Hash', value: item.txHash ? `${item.txHash.slice(0, 8)}...` : 'N/A' }
@@ -278,7 +303,7 @@ const ManageHistoryNLogs = () => {
         id: item.userId || 'N/A',
         status: item.status,
         fields: [
-          { label: 'Amount', value: `-$${formatAmount(item.amount)}` },
+          { label: 'Amount', value: `-$${formatAmount(item.amount)}`, highlight: true, negative: true },
           { label: 'Type', value: item.type || 'N/A' },
           { label: 'Date', value: formatDate(item.createdAt) },
           { label: 'TX Hash', value: item.txHash ? `${item.txHash.slice(0, 8)}...` : 'N/A' }
@@ -289,295 +314,392 @@ const ManageHistoryNLogs = () => {
     const card = cardData[activeTab];
 
     return (
-      <div key={index} className="card-item">
-        <div className="card-header">
-          <div className="card-id">ID: {card.id}</div>
-          {getStatusBadge(card.status)}
-        </div>
-        <div className="card-body">
-          {card.fields.map((field, idx) => (
-            <div key={idx} className="card-field">
-              <div className="field-label">{field.label}</div>
-              <div 
-                className="field-value"
-                style={{
-                  color: field.label === 'Amount' && field.value.startsWith('+') ? AppColors.SUCCESS :
-                         field.label === 'Amount' && field.value.startsWith('-') ? AppColors.ERROR :
-                         field.label === 'Profit/Loss' && field.value.startsWith('+') ? AppColors.SUCCESS :
-                         field.label === 'Profit/Loss' && field.value.startsWith('-') ? AppColors.ERROR :
-                         AppColors.TXT_MAIN
-                }}
-              >
-                {field.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Card
+        key={index}
+        sx={{
+          mb: 2,
+          bgcolor: AppColors.BG_CARD,
+          border: `1px solid ${AppColors.BG_SECONDARY}`,
+          borderRadius: 2,
+          '&:hover': {
+            borderColor: AppColors.GOLD_DARK,
+            boxShadow: `0 4px 12px ${AppColors.GOLD_DARK}20`
+          }
+        }}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, pb: 1.5, borderBottom: `1px solid ${AppColors.BG_SECONDARY}` }}>
+            <Typography variant="body2" sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
+              ID: {card.id}
+            </Typography>
+            {getStatusChip(card.status)}
+          </Box>
+          <Grid container spacing={2}>
+            {card.fields.map((field, idx) => (
+              <Grid size={{ xs: 6 }} key={idx}>
+                <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, display: 'block', mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {field.label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: field.highlight
+                      ? field.positive
+                        ? AppColors.SUCCESS
+                        : field.negative
+                          ? AppColors.ERROR
+                          : field.profit && field.profit > 0
+                            ? AppColors.SUCCESS
+                            : field.profit && field.profit < 0
+                              ? AppColors.ERROR
+                              : AppColors.GOLD_DARK
+                      : AppColors.TXT_MAIN,
+                    fontWeight: field.highlight ? 600 : 400,
+                    fontFamily: field.label === 'TX Hash' ? 'monospace' : 'inherit'
+                  }}
+                >
+                  {field.value}
+                </Typography>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
     );
   };
 
   const renderFilters = () => (
-    <div className="responsive-filters" style={{
-      backgroundColor: AppColors.BG_CARD,
-      padding: '20px',
-      borderRadius: '12px',
-      marginBottom: '20px',
-      border: `1px solid ${AppColors.GOLD_DARK}20`
-    }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px',
-        marginBottom: '16px'
-      }}>
-        <input
-          type="text"
-          placeholder="Search by User ID, UID, or Email"
-          value={searchTerm}
-          onChange={handleSearch}
-          className="filter-input"
-          style={{
-            padding: '12px',
-            borderRadius: '8px',
-            border: `1px solid ${AppColors.GOLD_DARK}40`,
-            backgroundColor: AppColors.BG_SECONDARY,
-            color: AppColors.TXT_MAIN,
-            fontSize: '14px'
-          }}
-        />
+    <DashboardCard
+      title="Filters"
+      subtitle="Refine your search criteria"
+      sx={{ mb: { xs: 1, md: 1.5 } }}
+    >
+      <Grid container spacing={{ xs: 1, md: 1.5 }}>
+        <Grid size={{ xs: 6, md: 4 }}>
+          <TextField
+            id="outlined-basic"
+            label="Search by User ID, UID, or Email"
+            fullWidth
+            variant="outlined"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </Grid>
 
         {activeTab === 'trades' && (
           <>
-            <select
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="filter-select"
-              style={{
-                padding: '12px',
-                borderRadius: '8px',
-                border: `1px solid ${AppColors.GOLD_DARK}40`,
-                backgroundColor: AppColors.BG_SECONDARY,
-                color: AppColors.TXT_MAIN
-              }}
-            >
-              <option value="">All Status</option>
-              <option value="WIN">WIN</option>
-              <option value="LOSS">LOSS</option>
-              <option value="OPEN">OPEN</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Trading Pair (e.g., BTC-USD)"
-              value={filters.pair}
-              onChange={(e) => handleFilterChange('pair', e.target.value)}
-              style={{
-                padding: '12px',
-                borderRadius: '8px',
-                border: `1px solid ${AppColors.GOLD_DARK}40`,
-                backgroundColor: AppColors.BG_SECONDARY,
-                color: AppColors.TXT_MAIN
-              }}
-            />
+            <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
+                  Status
+                </InputLabel>
+                <Select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  label="Status"
+                  sx={{
+                    bgcolor: AppColors.BG_SECONDARY,
+                    color: AppColors.TXT_MAIN,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: AppColors.BG_SECONDARY,
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: AppColors.GOLD_DARK,
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: AppColors.GOLD_DARK,
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: AppColors.TXT_SUB,
+                    },
+                  }}
+                >
+                  <MenuItem value="">All Status</MenuItem>
+                  <MenuItem value="WIN">WIN</MenuItem>
+                  <MenuItem value="LOSS">LOSS</MenuItem>
+                  <MenuItem value="OPEN">OPEN</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+              <TextField
+                id="outlined-basic"
+                variant="outlined"
+                label="Trading Pair"
+                value={filters.pair}
+                onChange={(e) => handleFilterChange('pair', e.target.value)}
+                fullWidth
+              />
+            </Grid>
           </>
         )}
 
         {activeTab === 'income' && (
-          <select
-            value={filters.type}
-            onChange={(e) => handleFilterChange('type', e.target.value)}
-            style={{
-              padding: '12px',
-              borderRadius: '8px',
-              border: `1px solid ${AppColors.GOLD_DARK}40`,
-              backgroundColor: AppColors.BG_SECONDARY,
-              color: AppColors.TXT_MAIN
-            }}
-          >
-            <option value="">All Types</option>
-            <option value="REFERRAL_BONUS">Referral Bonus</option>
-            <option value="LEVEL_INCOME">Level Income</option>
-          </select>
+          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
+                Income Type
+              </InputLabel>
+              <Select
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                label="Income Type"
+                sx={{
+                  bgcolor: AppColors.BG_SECONDARY,
+                  color: AppColors.TXT_MAIN,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.BG_SECONDARY,
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.GOLD_DARK,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.GOLD_DARK,
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: AppColors.TXT_SUB,
+                  },
+                }}
+              >
+                <MenuItem value="">All Types</MenuItem>
+                <MenuItem value="REFERRAL_BONUS">Referral Bonus</MenuItem>
+                <MenuItem value="LEVEL_INCOME">Level Income</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
         )}
 
         {(activeTab === 'deposits' || activeTab === 'withdrawals') && (
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            style={{
-              padding: '12px',
-              borderRadius: '8px',
-              border: `1px solid ${AppColors.GOLD_DARK}40`,
-              backgroundColor: AppColors.BG_SECONDARY,
-              color: AppColors.TXT_MAIN
-            }}
-          >
-            <option value="">All Status</option>
-            <option value="SUCCESS">Success</option>
-            <option value="PENDING">Pending</option>
-            <option value="FAILED">Failed</option>
-          </select>
+          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
+                Status
+              </InputLabel>
+              <Select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                label="Status"
+                sx={{
+                  bgcolor: AppColors.BG_SECONDARY,
+                  color: AppColors.TXT_MAIN,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.BG_SECONDARY,
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.GOLD_DARK,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.GOLD_DARK,
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: AppColors.TXT_SUB,
+                  },
+                }}
+              >
+                <MenuItem value="">All Status</MenuItem>
+                <MenuItem value="SUCCESS">Success</MenuItem>
+                <MenuItem value="PENDING">Pending</MenuItem>
+                <MenuItem value="FAILED">Failed</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
         )}
 
         {activeTab === 'withdrawals' && (
-          <select
-            value={filters.type}
-            onChange={(e) => handleFilterChange('type', e.target.value)}
-            style={{
-              padding: '12px',
-              borderRadius: '8px',
-              border: `1px solid ${AppColors.GOLD_DARK}40`,
-              backgroundColor: AppColors.BG_SECONDARY,
-              color: AppColors.TXT_MAIN
-            }}
-          >
-            <option value="">All Types</option>
-            <option value="WITHDRAW_WINNINGS">Withdraw Winnings</option>
-            <option value="WITHDRAW_WORKING">Withdraw Working</option>
-          </select>
+          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: AppColors.TXT_SUB, '&.Mui-focused': { color: AppColors.GOLD_DARK } }}>
+                Withdrawal Type
+              </InputLabel>
+              <Select
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                label="Withdrawal Type"
+                sx={{
+                  bgcolor: AppColors.BG_SECONDARY,
+                  color: AppColors.TXT_MAIN,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.BG_SECONDARY,
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.GOLD_DARK,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: AppColors.GOLD_DARK,
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: AppColors.TXT_SUB,
+                  },
+                }}
+              >
+                <MenuItem value="">All Types</MenuItem>
+                <MenuItem value="WITHDRAW_WINNINGS">Withdraw Winnings</MenuItem>
+                <MenuItem value="WITHDRAW_WORKING">Withdraw Working</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
         )}
 
-        <input
-          type="date"
-          value={filters.startDate}
-          onChange={(e) => handleFilterChange('startDate', e.target.value)}
-          style={{
-            padding: '12px',
-            borderRadius: '8px',
-            border: `1px solid ${AppColors.GOLD_DARK}40`,
-            backgroundColor: AppColors.BG_SECONDARY,
-            color: AppColors.TXT_MAIN
-          }}
-        />
+        <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+          <DatePicker
+            label="Start Date"
+            value={filters.startDate}
+            onChange={(newValue) => handleFilterChange('startDate', newValue)}
+          />
+        </Grid>
 
-        <input
-          type="date"
-          value={filters.endDate}
-          onChange={(e) => handleFilterChange('endDate', e.target.value)}
-          style={{
-            padding: '12px',
-            borderRadius: '8px',
-            border: `1px solid ${AppColors.GOLD_DARK}40`,
-            backgroundColor: AppColors.BG_SECONDARY,
-            color: AppColors.TXT_MAIN
-          }}
-        />
-      </div>
-
-      <button
+        <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+          <DatePicker
+            label="End Date"
+            value={filters.endDate}
+            onChange={(newValue) => handleFilterChange('endDate', newValue)}
+          />
+        </Grid>
+      </Grid>
+      <Button
         onClick={clearFilters}
-        className="action-button"
-        style={{
-          padding: '10px 20px',
-          borderRadius: '8px',
-          border: `1px solid ${AppColors.GOLD_DARK}`,
-          backgroundColor: 'transparent',
+        variant="outlined"
+        startIcon={<Clear />}
+        sx={{
+          mt: { xs: 1, md: 1.5 },
+          alignSelf: 'flex-end',
+          borderColor: AppColors.GOLD_DARK,
           color: AppColors.GOLD_DARK,
-          cursor: 'pointer',
-          fontSize: '14px',
-          transition: 'all 0.3s ease'
-        }}
-        onMouseOver={(e) => {
-          e.target.style.backgroundColor = `${AppColors.GOLD_DARK}20`;
-        }}
-        onMouseOut={(e) => {
-          e.target.style.backgroundColor = 'transparent';
+          '&:hover': {
+            borderColor: AppColors.GOLD_LIGHT,
+            bgcolor: `${AppColors.GOLD_DARK}10`,
+          },
         }}
       >
         Clear Filters
-      </button>
-    </div>
+      </Button>
+    </DashboardCard>
   );
 
   const renderTradeRow = (item, index) => (
-    <tr key={item.id || index} className="table-row" style={{
-      backgroundColor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-      borderBottom: `1px solid ${AppColors.GOLD_DARK}10`
-    }}>
-      <td style={cellStyle}>{item.userId || 'N/A'}</td>
-      <td style={cellStyle}>{item.pair || 'N/A'}</td>
-      <td style={cellStyle}>${formatAmount(item.amount)}</td>
-      <td style={cellStyle}>{getStatusBadge(item.status)}</td>
-      <td style={cellStyle}>{formatDate(item.createdAt)}</td>
-      <td style={cellStyle}>{formatDate(item.closedAt)}</td>
-      <td style={cellStyle}>
-        <span style={{ color: item.status === 'WIN' ? AppColors.SUCCESS : AppColors.ERROR }}>
+    <TableRow
+      key={item.id || index}
+      sx={{
+        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
+        '&:hover': {
+          bgcolor: `${AppColors.GOLD_DARK}10`,
+        },
+      }}
+    >
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.pair || 'N/A'}</TableCell>
+      <TableCell>
+        <Typography sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
+          ${formatAmount(item.amount)}
+        </Typography>
+      </TableCell>
+      <TableCell>{getStatusChip(item.status)}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.closedAt)}</TableCell>
+      <TableCell>
+        <Typography sx={{
+          color: item.status === 'WIN' ? AppColors.SUCCESS : item.status === 'LOSS' ? AppColors.ERROR : AppColors.GOLD_DARK,
+          fontWeight: 600
+        }}>
           {item.profit ? (item.profit > 0 ? '+' : '') + formatAmount(item.profit) : 'N/A'}
-        </span>
-      </td>
-    </tr>
+        </Typography>
+      </TableCell>
+    </TableRow>
   );
 
   const renderIncomeRow = (item, index) => (
-    <tr key={item.id || index} className="table-row" style={{
-      backgroundColor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-      borderBottom: `1px solid ${AppColors.GOLD_DARK}10`
-    }}>
-      <td style={cellStyle}>{item.userId || 'N/A'}</td>
-      <td style={cellStyle}>{item.type || 'N/A'}</td>
-      <td style={cellStyle}>
-        <span style={{ color: AppColors.SUCCESS }}>
+    <TableRow
+      key={item.id || index}
+      sx={{
+        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
+        '&:hover': {
+          bgcolor: `${AppColors.GOLD_DARK}10`,
+        },
+      }}
+    >
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.type || 'N/A'}</TableCell>
+      <TableCell>
+        <Typography sx={{ color: AppColors.SUCCESS, fontWeight: 600 }}>
           +${formatAmount(item.amount)}
-        </span>
-      </td>
-      <td style={cellStyle}>{item.fromUserId || 'N/A'}</td>
-      <td style={cellStyle}>{formatDate(item.createdAt)}</td>
-      <td style={cellStyle}>{item.description || 'N/A'}</td>
-    </tr>
+        </Typography>
+      </TableCell>
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.fromUserId || 'N/A'}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{item.description || 'N/A'}</TableCell>
+    </TableRow>
   );
 
   const renderDepositRow = (item, index) => (
-    <tr key={item.id || index} className="table-row" style={{
-      backgroundColor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-      borderBottom: `1px solid ${AppColors.GOLD_DARK}10`
-    }}>
-      <td style={cellStyle}>{item.userId || 'N/A'}</td>
-      <td style={cellStyle}>${formatAmount(item.amount)}</td>
-      <td style={cellStyle}>{item.chain || 'N/A'}</td>
-      <td style={cellStyle}>
-        <span style={{ fontSize: '12px', fontFamily: 'monospace' }}>
+    <TableRow
+      key={item.id || index}
+      sx={{
+        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
+        '&:hover': {
+          bgcolor: `${AppColors.GOLD_DARK}10`,
+        },
+      }}
+    >
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
+      <TableCell>
+        <Typography sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
+          ${formatAmount(item.amount)}
+        </Typography>
+      </TableCell>
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.chain || 'N/A'}</TableCell>
+      <TableCell>
+        <Typography sx={{ color: AppColors.TXT_SUB, fontFamily: 'monospace', fontSize: '0.875rem' }}>
           {item.address ? `${item.address.slice(0, 8)}...${item.address.slice(-6)}` : 'N/A'}
-        </span>
-      </td>
-      <td style={cellStyle}>{getStatusBadge(item.status)}</td>
-      <td style={cellStyle}>{formatDate(item.createdAt)}</td>
-      <td style={cellStyle}>
+        </Typography>
+      </TableCell>
+      <TableCell>{getStatusChip(item.status)}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
+      <TableCell>
         {item.txHash ? (
-          <span style={{ fontSize: '12px', fontFamily: 'monospace' }}>
+          <Typography sx={{ color: AppColors.TXT_SUB, fontFamily: 'monospace', fontSize: '0.875rem' }}>
             {`${item.txHash.slice(0, 8)}...${item.txHash.slice(-6)}`}
-          </span>
-        ) : 'N/A'}
-      </td>
-    </tr>
+          </Typography>
+        ) : (
+          'N/A'
+        )}
+      </TableCell>
+    </TableRow>
   );
 
   const renderWithdrawalRow = (item, index) => (
-    <tr key={item.id || index} className="table-row" style={{
-      backgroundColor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
-      borderBottom: `1px solid ${AppColors.GOLD_DARK}10`
-    }}>
-      <td style={cellStyle}>{item.userId || 'N/A'}</td>
-      <td style={cellStyle}>
-        <span style={{ color: AppColors.ERROR }}>
+    <TableRow
+      key={item.id || index}
+      sx={{
+        bgcolor: index % 2 === 0 ? AppColors.BG_CARD : AppColors.BG_SECONDARY,
+        '&:hover': {
+          bgcolor: `${AppColors.GOLD_DARK}10`,
+        },
+      }}
+    >
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.userId || 'N/A'}</TableCell>
+      <TableCell>
+        <Typography sx={{ color: AppColors.ERROR, fontWeight: 600 }}>
           -${formatAmount(item.amount)}
-        </span>
-      </td>
-      <td style={cellStyle}>{item.type || 'N/A'}</td>
-      <td style={cellStyle}>
-        <span style={{ fontSize: '12px', fontFamily: 'monospace' }}>
+        </Typography>
+      </TableCell>
+      <TableCell sx={{ color: AppColors.TXT_MAIN }}>{item.type || 'N/A'}</TableCell>
+      <TableCell>
+        <Typography sx={{ color: AppColors.TXT_SUB, fontFamily: 'monospace', fontSize: '0.875rem' }}>
           {item.toAddress ? `${item.toAddress.slice(0, 8)}...${item.toAddress.slice(-6)}` : 'N/A'}
-        </span>
-      </td>
-      <td style={cellStyle}>{getStatusBadge(item.status)}</td>
-      <td style={cellStyle}>{formatDate(item.createdAt)}</td>
-      <td style={cellStyle}>
+        </Typography>
+      </TableCell>
+      <TableCell>{getStatusChip(item.status)}</TableCell>
+      <TableCell sx={{ color: AppColors.TXT_SUB }}>{formatDate(item.createdAt)}</TableCell>
+      <TableCell>
         {item.txHash ? (
-          <span style={{ fontSize: '12px', fontFamily: 'monospace' }}>
+          <Typography sx={{ color: AppColors.TXT_SUB, fontFamily: 'monospace', fontSize: '0.875rem' }}>
             {`${item.txHash.slice(0, 8)}...${item.txHash.slice(-6)}`}
-          </span>
-        ) : 'N/A'}
-      </td>
-    </tr>
+          </Typography>
+        ) : (
+          'N/A'
+        )}
+      </TableCell>
+    </TableRow>
   );
 
   const renderTableHeaders = () => {
@@ -589,21 +711,25 @@ const ManageHistoryNLogs = () => {
     };
 
     return (
-      <thead>
-        <tr style={{ backgroundColor: `${AppColors.GOLD_DARK}20` }}>
+      <TableHead>
+        <TableRow sx={{ bgcolor: `${AppColors.GOLD_DARK}20` }}>
           {headers[activeTab]?.map((header, index) => (
-            <th key={index} style={{
-              ...headerStyle,
-              color: AppColors.GOLD_DARK,
-              fontWeight: '600',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
+            <TableCell
+              key={index}
+              sx={{
+                color: AppColors.GOLD_DARK,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                fontSize: '0.875rem',
+                borderBottom: `2px solid ${AppColors.GOLD_DARK}`
+              }}
+            >
               {header}
-            </th>
+            </TableCell>
           ))}
-        </tr>
-      </thead>
+        </TableRow>
+      </TableHead>
     );
   };
 
@@ -616,309 +742,267 @@ const ManageHistoryNLogs = () => {
     };
 
     const renderFunction = renderFunctions[activeTab];
-    
+
     return (
-      <tbody>
+      <TableBody>
         {data.map((item, index) => renderFunction(item, index))}
-      </tbody>
+      </TableBody>
     );
   };
 
-  const renderPagination = () => (
-    <div className="responsive-pagination" style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: '20px',
-      padding: '16px',
-      backgroundColor: AppColors.BG_CARD,
-      borderRadius: '12px',
-      border: `1px solid ${AppColors.GOLD_DARK}20`
-    }}>
-      <div style={{ color: AppColors.TXT_SUB, fontSize: '14px' }}>
-        Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
-      </div>
-      
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button
-          onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-          disabled={pagination.page <= 1}
-          style={{
-            ...paginationButtonStyle,
-            opacity: pagination.page <= 1 ? 0.5 : 1,
-            cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer'
-          }}
-        >
-          Previous
-        </button>
-
-        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-          const page = Math.max(1, pagination.page - 2) + i;
-          if (page > pagination.totalPages) return null;
-          
-          return (
-            <button
-              key={page}
-              onClick={() => setPagination(prev => ({ ...prev, page }))}
-              style={{
-                ...paginationButtonStyle,
-                backgroundColor: page === pagination.page ? AppColors.GOLD_DARK : 'transparent',
-                color: page === pagination.page ? AppColors.BG_MAIN : AppColors.GOLD_DARK
-              }}
-            >
-              {page}
-            </button>
-          );
-        })}
-
-        <button
-          onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
-          disabled={pagination.page >= pagination.totalPages}
-          style={{
-            ...paginationButtonStyle,
-            opacity: pagination.page >= pagination.totalPages ? 0.5 : 1,
-            cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer'
-          }}
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  );
-
-  const containerStyle = {
-    padding: '24px',
-    minHeight: '100vh',
-    backgroundColor: AppColors.BG_MAIN
+  const handlePageChange = (event, value) => {
+    setPagination(prev => ({ ...prev, page: value }));
   };
 
-  const headerStyle = {
-    padding: '12px 16px',
-    textAlign: 'left',
-    borderBottom: `2px solid ${AppColors.GOLD_DARK}`,
-    color: AppColors.TXT_MAIN,
-    fontSize: '14px'
-  };
-
-  const cellStyle = {
-    padding: '12px 16px',
-    color: AppColors.TXT_MAIN,
-    fontSize: '14px',
-    borderBottom: `1px solid ${AppColors.GOLD_DARK}10`
-  };
-
-  const paginationButtonStyle = {
-    padding: '8px 16px',
-    borderRadius: '6px',
-    border: `1px solid ${AppColors.GOLD_DARK}`,
-    backgroundColor: 'transparent',
-    color: AppColors.GOLD_DARK,
-    cursor: 'pointer',
-    fontSize: '14px',
-    transition: 'all 0.3s ease'
-  };
+  if (loading && data.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          bgcolor: AppColors.BG_MAIN
+        }}
+      >
+        <BTLoader />
+      </Box>
+    );
+  }
 
   return (
-    <div className="history-logs-container" style={containerStyle}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+    <Box sx={{ bgcolor: AppColors.BG_MAIN, minHeight: '100vh' }}>
       {/* Header */}
-      <div className="responsive-stats" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '32px'
-      }}>
-        <div>
-          <h1 style={{ 
-            color: AppColors.TXT_MAIN, 
-            marginBottom: '8px',
-            background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            History & Logs Management
-          </h1>
-          <p style={{ color: AppColors.TXT_SUB, margin: '0' }}>
-            Monitor and analyze all platform activities
-          </p>
-        </div>
-
-        <div style={{
+      <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
+        <Box sx={{
           display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 1, md: 1.5 }
         }}>
-          <button
-            onClick={exportData}
-            disabled={exportLoading || data.length === 0}
-            className="export-button"
-            style={{
-              padding: '12px 20px',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: AppColors.GOLD_DARK,
-              color: AppColors.BG_MAIN,
-              cursor: exportLoading ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              opacity: exportLoading || data.length === 0 ? 0.6 : 1,
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            {exportLoading ? (
-              <>
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  border: `2px solid ${AppColors.BG_MAIN}`,
-                  borderTop: '2px solid transparent',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                Exporting...
-              </>
-            ) : (
-              <>
-                📄 Export CSV
-              </>
-            )}
-          </button>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: AppColors.TXT_MAIN,
+                mb: { xs: 0.5, md: 1 },
+                background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              History & Logs Management
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: AppColors.TXT_SUB,
+                fontWeight: 400
+              }}
+            >
+              Monitor and analyze all platform activities
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 1.5 }, flexWrap: 'wrap' }}>
+            <Button
+              onClick={exportData}
+              variant="outlined"
+              startIcon={<GetApp />}
+              sx={{
+                px: { xs: 1, md: 1.5 },
+                py: { xs: 0.27, md: 0.5 },
+                borderColor: AppColors.GOLD_DARK,
+                color: AppColors.GOLD_DARK,
+                '&:hover': {
+                  borderColor: AppColors.GOLD_LIGHT,
+                  color: AppColors.GOLD_LIGHT,
+                  bgcolor: `${AppColors.GOLD_DARK}10`
+                }
+              }}
+            >
+              {exportLoading ? 'Exporting...' : 'Export CSV'}
+            </Button>
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: AppColors.BG_CARD,
+                border: `1px solid ${AppColors.BG_SECONDARY}`,
+                px: { xs: 1, md: 1.5 },
+                py: { xs: 0.5, md: 0.75 },
+                borderRadius: 2,
+                display: 'flex',
+                gap: { xs: 0.5, md: 1 },
+              }}
+            >
+              <Typography variant="caption" sx={{ color: AppColors.TXT_SUB }}>
+                Total Records
+              </Typography>
+              <Typography variant="h6" sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>
+                {pagination.total}
+              </Typography>
+            </Paper>
+          </Box>
+        </Box>
+      </Box>
 
-          <div style={{
-            padding: '16px',
-            backgroundColor: AppColors.BG_CARD,
-            borderRadius: '12px',
-            border: `1px solid ${AppColors.GOLD_DARK}20`,
-            textAlign: 'center'
-          }}>
-            <div style={{ color: AppColors.GOLD_DARK, fontSize: '24px', fontWeight: '600' }}>
-              {pagination.total}
-            </div>
-            <div style={{ color: AppColors.TXT_SUB, fontSize: '12px' }}>
-              Total Records
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="responsive-tabs" style={{
-        display: 'flex',
-        gap: '2px',
-        marginBottom: '24px',
-        backgroundColor: AppColors.BG_CARD,
-        padding: '8px',
-        borderRadius: '12px',
-        border: `1px solid ${AppColors.GOLD_DARK}20`,
-        flexWrap: 'wrap'
-      }}>
+      <Tabs
+        value={activeTab}
+        onChange={(e, newValue) => {
+          setActiveTab(newValue);
+          setPagination(prev => ({ ...prev, page: 1 }));
+        }}
+        sx={{
+          bgcolor: AppColors.BG_CARD,
+          border: `1px solid ${AppColors.BG_SECONDARY}`,
+          borderRadius: 3,
+          mb: { xs: 1, md: 1.5 },
+          minHeight: 'auto',
+          '& .MuiTabs-indicator': {
+            backgroundColor: AppColors.GOLD_DARK,
+          },
+          '& .MuiTab-root': {
+            color: AppColors.TXT_SUB,
+            minHeight: 'auto',
+            padding: { xs: '8px 12px', md: '10px 16px' },
+            fontSize: { xs: '0.75rem', md: '0.875rem' },
+            textTransform: 'none',
+            fontWeight: 500,
+            '& .MuiTab-iconWrapper': {
+              marginRight: '10px',
+              fontSize: { xs: '1rem', md: '1.125rem' },
+            },
+            '&.Mui-selected': {
+              color: AppColors.GOLD_DARK,
+              fontWeight: 600,
+            },
+          },
+        }}
+      >
         {tabs.map((tab) => (
-          <button
+          <Tab
             key={tab.id}
-            onClick={() => {
-              setActiveTab(tab.id);
-              setPagination(prev => ({ ...prev, page: 1 }));
-            }}
-            style={{
-              flex: '1',
-              minWidth: '200px',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: activeTab === tab.id ? AppColors.GOLD_DARK : 'transparent',
-              color: activeTab === tab.id ? AppColors.BG_MAIN : AppColors.TXT_MAIN,
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-            onMouseOver={(e) => {
-              if (activeTab !== tab.id) {
-                e.target.style.backgroundColor = `${AppColors.GOLD_DARK}20`;
-              }
-            }}
-            onMouseOut={(e) => {
-              if (activeTab !== tab.id) {
-                e.target.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>{tab.icon}</span>
-            {tab.label}
-          </button>
+            value={tab.id}
+            icon={tab.icon}
+            label={tab.label}
+            iconPosition="start"
+          />
         ))}
-      </div>
+      </Tabs>
 
       {/* Filters */}
       {renderFilters()}
 
       {/* Data Display */}
-      <div className={isMobileView ? 'mobile-card-view' : ''} style={{
-        backgroundColor: AppColors.BG_CARD,
-        borderRadius: '12px',
-        overflow: 'hidden',
-        border: `1px solid ${AppColors.GOLD_DARK}20`,
-        boxShadow: `0 4px 20px ${AppColors.GOLD_DARK}10`
-      }}>
+      <DashboardCard
+        title={`${tabs.find(t => t.id === activeTab)?.label}`}
+        subtitle={`Showing ${data.length} of ${pagination.total} records`}
+      >
         {loading ? (
-          <div className="loading-container" style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '60px',
-            color: AppColors.GOLD_DARK
-          }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
             <BTLoader />
-          </div>
+          </Box>
         ) : data.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px',
-            color: AppColors.TXT_SUB
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-            <h3 style={{ color: AppColors.TXT_MAIN, marginBottom: '8px' }}>No Data Found</h3>
-            <p>No records match your current filters.</p>
-          </div>
-        ) : isMobileView ? (
-          // Mobile Card View
-          <div style={{ padding: '16px' }}>
-            {data.map((item, index) => renderMobileCard(item, index))}
-          </div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <History sx={{ fontSize: 64, color: AppColors.TXT_SUB, mb: 2, opacity: 0.5 }} />
+            <Typography variant="h6" sx={{ color: AppColors.TXT_MAIN, mb: 1 }}>
+              No Data Found
+            </Typography>
+            <Typography variant="body2" sx={{ color: AppColors.TXT_SUB }}>
+              No records match your current filters.
+            </Typography>
+          </Box>
         ) : (
-          // Desktop Table View
-          <div className="table-container table-scroll-container" style={{ overflowX: 'auto' }}>
-            <table className="responsive-table" style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              minWidth: '800px'
-            }}>
-              {renderTableHeaders()}
-              {renderTableBody()}
-            </table>
-          </div>
-        )}
-      </div>
+          <>
+            {/* Mobile Card View */}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+              {data.map((item, index) => renderMobileCard(item, index))}
+            </Box>
 
-      {/* Pagination */}
-      {data.length > 0 && renderPagination()}
-    </div>
+            {/* Desktop Table View */}
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+              <TableContainer>
+                <Table>
+                  {renderTableHeaders()}
+                  {renderTableBody()}
+                </Table>
+              </TableContainer>
+            </Box>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Pagination
+                  count={pagination.totalPages}
+                  page={pagination.page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: AppColors.TXT_MAIN,
+                      '&.Mui-selected': {
+                        bgcolor: AppColors.GOLD_DARK,
+                        color: AppColors.BG_MAIN,
+                        '&:hover': {
+                          bgcolor: AppColors.GOLD_LIGHT,
+                        },
+                      },
+                      '&:hover': {
+                        bgcolor: `${AppColors.GOLD_DARK}20`,
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            )}
+          </>
+        )}
+      </DashboardCard>
+    </Box>
   );
 };
+
+// Reusable Dashboard Card Component
+const DashboardCard = ({ title, subtitle, children, sx = {} }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      backgroundColor: AppColors.BG_CARD,
+      border: `1px solid ${AppColors.BG_SECONDARY}`,
+      borderRadius: 3,
+      p: { xs: 1, md: 1.5 },
+      height: '100%',
+      background: `linear-gradient(135deg, ${AppColors.BG_CARD} 0%, ${AppColors.BG_SECONDARY} 100%)`,
+      ...sx
+    }}
+  >
+    <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
+      <Typography
+        variant="h6"
+        sx={{
+          color: AppColors.TXT_MAIN,
+          fontWeight: 600,
+          mb: { xs: 0.5, md: 1 },
+        }}
+      >
+        {title}
+      </Typography>
+      {subtitle && (
+        <Typography
+          variant="body2"
+          sx={{
+            color: AppColors.TXT_SUB,
+            fontSize: '0.875rem',
+          }}
+        >
+          {subtitle}
+        </Typography>
+      )}
+    </Box>
+    {children}
+  </Paper>
+);
 
 export default ManageHistoryNLogs;

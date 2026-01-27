@@ -19,9 +19,9 @@ const theme = createTheme({
   },
   palette: {
     primary: {
-      main: "#FFD700", // Gold primary from AppColors
+      main: "#D4AF37", // Gold primary from AppColors
       light: "#FFE44D", // Gold light
-      dark: "#D4AF37", // Gold dark
+      dark: "#FFD700", // Gold dark
       contrastText: "#000",
     },
     secondary: {
@@ -107,10 +107,10 @@ const theme = createTheme({
           },
         },
         containedPrimary: {
-          background: "linear-gradient(135deg, #FFD700 0%, #D4AF37 100%)",
+          background: "linear-gradient(135deg, #D4AF37 0%, #FFE44D 100%)",
           color: "#000",
           "&:hover": {
-            background: "linear-gradient(135deg, #FFE44D 0%, #FFD700 100%)",
+            background: "linear-gradient(135deg, #FFE44D 0%, #D4AF37 100%)",
           },
         },
       },

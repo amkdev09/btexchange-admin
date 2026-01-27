@@ -20,6 +20,7 @@ import networkService from "../../services/networkService";
 import useSnackbar from "../../hooks/useSnackbar";
 import TextInput from "../../components/input/textInput";
 import Cookies from "js-cookie";
+import BtParalex from "../../components/heroBetBit/BtParalex";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -53,14 +54,11 @@ export default function NetworkAdminLogin() {
 
         const { data, message } = response || {};
 
-        if (!data?.token) {
-          throw new Error("No token received from server");
+        if (data?.token) {          
+          Cookies.set("token2", data.token);
+          showSnackbar(message || "Login successful", "success");
+          navigate("/network/dashboard");
         }
-
-        Cookies.set("networkAdminToken", data.token);
-        
-        showSnackbar(message || "Login successful", "success");
-        navigate("/network/admin/dashboard");
       } catch (err) {
         console.error("❌ Network admin login failed:", err);
         showSnackbar(
@@ -76,127 +74,99 @@ export default function NetworkAdminLogin() {
   });
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        py: { xs: 2, sm: 3, md: 4 },
-        px: { xs: 1.5, sm: 2, md: 3 },
-        bgcolor: "background.default",
-      }}
-    >
-      <Container
-        maxWidth="sm"
+    <BtParalex>
+      <Box
         sx={{
-          width: "100%",
-          maxWidth: { xs: "100%", sm: "500px", md: "600px" },
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          py: { xs: 2, sm: 3, md: 4 },
+          px: { xs: 1.5, sm: 2, md: 3 },
         }}
       >
-        <Box
+        <Container
+          maxWidth="sm"
           sx={{
-            p: { xs: 2, sm: 3, md: 4 },
-            bgcolor: "background.paper",
-            borderRadius: 2,
-            boxShadow: 3,
+            width: "100%",
+            maxWidth: { xs: "100%", sm: "500px", md: "600px" },
           }}
         >
-          <Box sx={{ mb: { xs: 3, sm: 4 }, textAlign: "center" }}>
-            <Typography
-              variant="h4"
-              sx={{
-                color: AppColors.TXT_MAIN,
-                mb: 1,
-                fontWeight: 600,
-              }}
-            >
-              Network Admin Login
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: AppColors.TXT_SUB,
-              }}
-            >
-              Network/Investment Admin Panel
-            </Typography>
-          </Box>
-
-          <Box component="form" onSubmit={formik.handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextInput
-              name="email"
-              placeholder="Enter admin email"
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.email && Boolean(formik.errors.email)}
-              helperText={formik.touched.email && formik.errors.email}
-              startIcon={<Email sx={{ color: AppColors.TXT_SUB, fontSize: 20 }} />}
-            />
-
-            <TextInput
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.password && Boolean(formik.errors.password)}
-              helperText={formik.touched.password && formik.errors.password}
-              startIcon={<Lock sx={{ color: AppColors.TXT_SUB, fontSize: 20 }} />}
-              endIcon={
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                  sx={{ color: AppColors.TXT_SUB, "&:hover": { color: AppColors.GOLD_PRIMARY } }}
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              }
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              disabled={loading}
-              className="btn-primary"
-              sx={{
-                mb: { xs: 1, sm: 3 },
-                py: { xs: 1.5, sm: 1.75 },
-              }}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-
-            <Box sx={{ textAlign: "center" }}>
+          <Box
+            sx={{
+              p: { xs: 2, sm: 3, md: 4 },
+            }}
+          >
+            <Box sx={{ mb: { xs: 3, sm: 4 }, textAlign: "center" }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: AppColors.TXT_MAIN,
+                  mb: 1,
+                  fontWeight: 600,
+                }}
+              >
+                Network Admin Login
+              </Typography>
               <Typography
                 variant="body2"
                 sx={{
                   color: AppColors.TXT_SUB,
                 }}
               >
-                Don't have an account?{" "}
-                <Link
-                  to="/network/admin/signup"
-                  style={{
-                    color: AppColors.GOLD_PRIMARY,
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.textDecoration = "underline";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.textDecoration = "none";
-                  }}
-                >
-                  Sign Up
-                </Link>
+                Network/Investment Admin Panel
               </Typography>
             </Box>
+
+            <Box component="form" onSubmit={formik.handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextInput
+                name="email"
+                placeholder="Enter admin email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.email && Boolean(formik.errors.email)}
+                helperText={formik.touched.email && formik.errors.email}
+                startIcon={<Email sx={{ color: AppColors.TXT_SUB, fontSize: 20 }} />}
+              />
+
+              <TextInput
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.password && Boolean(formik.errors.password)}
+                helperText={formik.touched.password && formik.errors.password}
+                startIcon={<Lock sx={{ color: AppColors.TXT_SUB, fontSize: 20 }} />}
+                endIcon={
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    sx={{ color: AppColors.TXT_SUB, "&:hover": { color: AppColors.GOLD_PRIMARY } }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                }
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                disabled={loading}
+                className="btn-primary"
+                sx={{
+                  mb: { xs: 1, sm: 3 },
+                  py: { xs: 1.5, sm: 1.75 },
+                }}
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </Container>
-    </Box>
+        </Container>
+      </Box>
+    </BtParalex>
   );
 }

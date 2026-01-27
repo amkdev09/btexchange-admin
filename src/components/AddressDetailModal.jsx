@@ -90,7 +90,7 @@ const AddressDetailModal = ({ isOpen, onClose, address, chain }) => {
         sx={{
           bgcolor: AppColors.BG_CARD,
           borderBottom: `1px solid ${AppColors.BG_SECONDARY}`,
-          p: 3
+          p: { xs: 1, md: 1.5 }
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -129,7 +129,7 @@ const AddressDetailModal = ({ isOpen, onClose, address, chain }) => {
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
+      <DialogContent sx={{ p: { xs: 1, md: 1.5 } }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress sx={{ color: AppColors.GOLD_DARK }} />
@@ -143,7 +143,7 @@ const AddressDetailModal = ({ isOpen, onClose, address, chain }) => {
                 bgcolor: AppColors.BG_SECONDARY,
                 border: `1px solid ${AppColors.BG_SECONDARY}`,
                 borderRadius: 2,
-                p: 3
+                p: { xs: 1, md: 1.5 }
               }}
             >
               <Typography
@@ -151,7 +151,7 @@ const AddressDetailModal = ({ isOpen, onClose, address, chain }) => {
                 sx={{
                   color: AppColors.TXT_MAIN,
                   fontWeight: 600,
-                  mb: 2
+                  mb: { xs: 0.5, md: 1 }
                 }}
               >
                 Address Information
@@ -159,7 +159,7 @@ const AddressDetailModal = ({ isOpen, onClose, address, chain }) => {
               <Box>
                 <Typography
                   variant="body2"
-                  sx={{ color: AppColors.TXT_SUB, mb: 1 }}
+                  sx={{ color: AppColors.TXT_SUB, mb: { xs: 0.5, md: 1 } }}
                 >
                   Wallet Address
                 </Typography>
@@ -170,7 +170,7 @@ const AddressDetailModal = ({ isOpen, onClose, address, chain }) => {
                       color: AppColors.TXT_MAIN,
                       fontFamily: 'monospace',
                       bgcolor: AppColors.BG_CARD,
-                      p: 1.5,
+                      p: { xs: 1, md: 1.5 },
                       borderRadius: 1,
                       flex: 1,
                       wordBreak: 'break-all'

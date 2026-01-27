@@ -1,4 +1,7 @@
 // Utility functions for fund management
+import BinanceIcon from '../assets/svg/binance.svg';
+import EthereumIcon from '../assets/svg/ethereum.svg';
+import PolygonIcon from '../assets/svg/polygon.svg';
 
 export const formatAddress = (address, startChars = 6, endChars = 4) => {
   if (!address) return '';
@@ -28,21 +31,21 @@ export const getChainConfig = (chain) => {
       nativeCurrency: 'BNB',
       explorerUrl: 'https://bscscan.com',
       color: '#f3ba2f',
-      icon: '⚡'
+      icon: BinanceIcon
     },
     ETH: {
       name: 'Ethereum',
       nativeCurrency: 'ETH',
       explorerUrl: 'https://etherscan.io',
       color: '#627eea',
-      icon: '♦️'
+      icon: EthereumIcon
     },
     POLYGON: {
       name: 'Polygon',
       nativeCurrency: 'MATIC',
       explorerUrl: 'https://polygonscan.com',
       color: '#8247e5',
-      icon: '🔷'
+      icon: PolygonIcon
     }
   };
   

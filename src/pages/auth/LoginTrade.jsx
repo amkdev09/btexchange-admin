@@ -56,8 +56,6 @@ export default function LoginTrade() {
 
         if (Data?.token) {
           Cookies.set("token", Data.token);
-          Cookies.set("adminRole", Data.role || "ADMIN");
-
           showSnackbar(message || "Login successful", "success");
           navigate("/");
         }

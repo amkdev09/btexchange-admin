@@ -24,6 +24,7 @@ import {
 import useSnackbar from "../../hooks/useSnackbar";
 import { AppColors } from "../../constant/appColors";
 import tradeService from "../../services/tradeService";
+import BTLoader from "../../components/Loader";
 
 const AdminDashboard = () => {
   const theme = useTheme();
@@ -66,14 +67,14 @@ const AdminDashboard = () => {
           bgcolor: AppColors.BG_MAIN
         }}
       >
-        <CircularProgress sx={{ color: AppColors.GOLD_DARK }} />
+        <BTLoader />
       </Box>
     );
   }
 
   if (!dashboardData) {
     return (
-      <Box sx={{ p: 3, bgcolor: AppColors.BG_MAIN, minHeight: "100vh" }}>
+      <Box sx={{ p: { xs: 1, md: 1.5 }, bgcolor: AppColors.BG_MAIN, minHeight: "100vh" }}>
         <Typography variant="h6" sx={{ color: AppColors.TXT_MAIN, textAlign: "center" }}>
           No dashboard data available
         </Typography>
@@ -98,13 +99,13 @@ const AdminDashboard = () => {
   return (
     <Box >
       {/* Header */}
-      <Box sx={{ mb: { xs: 2, md: 4 } }}>
+      <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Typography
           variant="h4"
           sx={{
             fontWeight: 700,
             color: AppColors.TXT_MAIN,
-            mb: 1,
+            mb: { xs: 1, md: 1.5 },
             background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
@@ -125,8 +126,8 @@ const AdminDashboard = () => {
       </Box>
 
       {/* Key Metrics Overview */}
-      <Grid container spacing={3} sx={{ mb: { xs: 2, md: 4 } }}>
-        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+      <Grid container spacing={{ xs: 1, md: 1.5 }} sx={{ mb: { xs: 1, md: 1.5 } }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <MetricCard
             title="Total Users"
             value={users.totalUsers}
@@ -135,7 +136,7 @@ const AdminDashboard = () => {
             subtitle={`${users.activeUsers} active`}
           />
         </Grid>
-        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <MetricCard
             title="Total Balance"
             value={`$${balances.totalBalance.toLocaleString()}`}
@@ -144,7 +145,7 @@ const AdminDashboard = () => {
             subtitle={`$${balances.totalDeposited.toLocaleString()} deposited`}
           />
         </Grid>
-        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <MetricCard
             title="Total Trades"
             value={trades.totalTrades}
@@ -153,7 +154,7 @@ const AdminDashboard = () => {
             subtitle={`${trades.openTrades} open`}
           />
         </Grid>
-        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <MetricCard
             title="Trading Volume"
             value={`$${balances.totalTradedVolume.toLocaleString()}`}
@@ -165,13 +166,13 @@ const AdminDashboard = () => {
       </Grid>
 
       {/* User Analytics */}
-      <Grid container spacing={3} sx={{ mb: { xs: 2, md: 4 } }}>
+      <Grid container spacing={{ xs: 1, md: 1.5 }} sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Grid size={{ xs: 12, lg: 6 }}>
           <DashboardCard
             title="User Analytics"
             subtitle="Breakdown of user status and verification"
           >
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1, md: 1.5 }}>
               <Grid size={3}>
                 <UserStatItem
                   label="Total"
@@ -263,13 +264,13 @@ const AdminDashboard = () => {
       </Grid>
 
       {/* Financial Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 1, md: 1.5 }} sx={{ mb: { xs: 1, md: 1.5 } }}>
         <Grid size={{ xs: 12, lg: 8 }}>
           <DashboardCard
             title="Financial Overview"
             subtitle="Detailed breakdown of platform finances"
           >
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 1, md: 1.5 }}>
               <Grid size={{ xs: 6, md: 3 }}>
                 <FinancialMetric
                   label="Total Deposited"
@@ -304,10 +305,10 @@ const AdminDashboard = () => {
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 3, borderColor: AppColors.BG_SECONDARY }} />
+            <Divider sx={{ my: { xs: 1, md: 1.5 }, borderColor: AppColors.BG_SECONDARY }} />
 
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 6, md : 4}}>
+            <Grid container spacing={{ xs: 1, md: 1.5 }}>
+              <Grid size={{ xs: 6, md: 4 }}>
                 <FinancialMetric
                   label="Gross Trade Amount"
                   value={trades.totalGrossAmount}
@@ -315,7 +316,7 @@ const AdminDashboard = () => {
                   color={AppColors.GOLD_DARK}
                 />
               </Grid>
-              <Grid size={{xs: 6, md : 4}}>
+              <Grid size={{ xs: 6, md: 4 }}>
                 <FinancialMetric
                   label="Net Trade Amount"
                   value={trades.totalNetTradeAmount}
@@ -323,7 +324,7 @@ const AdminDashboard = () => {
                   color={AppColors.SUCCESS}
                 />
               </Grid>
-              <Grid size={{xs: 6, md : 4}}>
+              <Grid size={{ xs: 6, md: 4 }}>
                 <FinancialMetric
                   label="Fee Amount"
                   value={trades.totalFeeAmount}
@@ -340,7 +341,7 @@ const AdminDashboard = () => {
             title="Income Breakdown"
             subtitle="Platform revenue sources"
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, md: 1.5 } }}>
               <IncomeItem
                 label="Referral Income"
                 value={balances.totalReferralIncome}
@@ -367,7 +368,7 @@ const AdminDashboard = () => {
               />
               <Divider sx={{ borderColor: AppColors.BG_SECONDARY }} />
               <Box sx={{
-                p: 2,
+                p: { xs: 1, md: 1.5 },
                 backgroundColor: AppColors.HLT_LIGHT,
                 borderRadius: 2,
                 border: `1px solid ${AppColors.GOLD_DARK}30`
@@ -385,25 +386,25 @@ const AdminDashboard = () => {
       </Grid>
 
       {/* Withdrawal Statistics */}
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 1, md: 1.5 }}>
         <Grid size={{ xs: 12, md: 6 }}>
           <DashboardCard
             title="Withdrawal Statistics"
             subtitle="Winnings and working capital withdrawals"
           >
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 1, md: 1.5 }}>
               <Grid size={{ xs: 6 }}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" sx={{ color: AppColors.GOLD_DARK, fontWeight: 700, mb: 1 }}>
+                <Box sx={{ textAlign: 'center', px: { xs: 1, md: 1.5 } }}>
+                  <Typography variant="h4" sx={{ color: AppColors.GOLD_DARK, fontWeight: 700, mb: 0.5 }}>
                     ${withdrawals.withdrawWinnings.totalAmount.toLocaleString()}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, mb: 2 }}>
+                  <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, mb: { xs: 1, md: 1.5 } }}>
                     Winnings Withdrawn
                   </Typography>
                   <Typography variant="caption" sx={{
                     color: AppColors.TXT_SUB,
                     backgroundColor: AppColors.BG_SECONDARY,
-                    px: 2,
+                    px: { xs: 1, md: 1.5 },
                     py: 0.5,
                     borderRadius: 1
                   }}>
@@ -412,17 +413,17 @@ const AdminDashboard = () => {
                 </Box>
               </Grid>
               <Grid size={{ xs: 6 }}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" sx={{ color: AppColors.GOLD_DARK, fontWeight: 700, mb: 1 }}>
+                <Box sx={{ textAlign: 'center', px: { xs: 1, md: 1.5 } }}>
+                  <Typography variant="h4" sx={{ color: AppColors.GOLD_DARK, fontWeight: 700, mb: 0.5 }}>
                     ${withdrawals.withdrawWorking.totalAmount.toLocaleString()}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, mb: 2 }}>
+                  <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, mb: { xs: 1, md: 1.5 } }}>
                     Working Capital
                   </Typography>
                   <Typography variant="caption" sx={{
                     color: AppColors.TXT_SUB,
                     backgroundColor: AppColors.BG_SECONDARY,
-                    px: 2,
+                    px: { xs: 1, md: 1.5 },
                     py: 0.5,
                     borderRadius: 1
                   }}>
@@ -439,29 +440,29 @@ const AdminDashboard = () => {
             title="Quick Stats"
             subtitle="Key platform metrics at a glance"
           >
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
+            <Grid container spacing={{ xs: 1, md: 1.5 }}>
+              <Grid size={{ xs: 3 }}>
                 <QuickStatItem
                   label="Deleted Users"
                   value={users.deletedUsers}
                   color={AppColors.ERROR}
                 />
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid size={{ xs: 3 }}>
                 <QuickStatItem
                   label="Open Trades"
                   value={trades.openTrades}
                   color={AppColors.GOLD_DARK}
                 />
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid size={{ xs: 3 }}>
                 <QuickStatItem
                   label="Deposit Count"
                   value={deposits.count}
                   color={AppColors.SUCCESS}
                 />
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid size={{ xs: 3 }}>
                 <QuickStatItem
                   label="Total Income Events"
                   value={incomes.referralBonus.count + incomes.levelIncome.count + incomes.salaryIncome.count}
@@ -484,12 +485,12 @@ const DashboardCard = ({ title, subtitle, children }) => (
       backgroundColor: AppColors.BG_CARD,
       border: `1px solid ${AppColors.BG_SECONDARY}`,
       borderRadius: 3,
-      p: { xs: 2, md: 3 },
+      p: { xs: 1, md: 1.5 },
       height: '100%',
       background: `linear-gradient(135deg, ${AppColors.BG_CARD} 0%, ${AppColors.BG_SECONDARY} 100%)`,
     }}
   >
-    <Box sx={{ mb: { xs: 2, md: 3 } }}>
+    <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
       <Typography
         variant="h6"
         sx={{
@@ -522,7 +523,7 @@ const MetricCard = ({ title, value, icon, trend, subtitle }) => (
       backgroundColor: AppColors.BG_CARD,
       border: `1px solid ${AppColors.BG_SECONDARY}`,
       borderRadius: 3,
-      p: { xs: 2, md: 3 },
+      p: { xs: 1, md: 1.5 },
       position: 'relative',
       overflow: 'hidden',
       '&::before': {
@@ -583,38 +584,40 @@ const MetricCard = ({ title, value, icon, trend, subtitle }) => (
 
 // User Statistics Item
 const UserStatItem = ({ label, value, percentage, color, icon }) => (
-  <Box sx={{ textAlign: 'center', p: { xs: 1, md: 2 } }}>
-    <Box
-      sx={{
-        display: 'inline-flex',
-        p: { xs: 1, md: 1.5 },
-        borderRadius: 3,
-        backgroundColor: `${color}20`,
-        color: color,
-        mb: { xs: 1, md: 2 },
-      }}
-    >
-      {icon}
+  <Box sx={{ textAlign: 'left', px: { xs: 1, md: 1.5 }, py: { xs: 0.5, md: 1 } }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 0.5, md: 1 } , mb: { xs: 0.5, md: 1 } }}>
+      <Box
+        sx={{
+          display: 'inline-flex',
+          p: { xs: 0.5, md: 1 },
+          borderRadius: 3,
+          backgroundColor: `${color}20`,
+          color: color,
+        }}
+      >
+        {icon}
+      </Box>
+      <Box>
+        <Typography
+          variant="body2"
+          sx={{
+            color: AppColors.TXT_SUB,
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography
+          variant="h5"
+          sx={{
+            color: AppColors.TXT_MAIN,
+            fontWeight: 700,
+          }}
+        >
+          {value}
+        </Typography>
+      </Box>
     </Box>
-    <Typography
-      variant="h5"
-      sx={{
-        color: AppColors.TXT_MAIN,
-        fontWeight: 700,
-        mb: { xs: 0.5, md: 1 },
-      }}
-    >
-      {value}
-    </Typography>
-    <Typography
-      variant="body2"
-      sx={{
-        color: AppColors.TXT_SUB,
-        mb: { xs: 0.5, md: 1 },
-      }}
-    >
-      {label}
-    </Typography>
+
     <Typography
       variant="caption"
       sx={{
@@ -633,7 +636,7 @@ const UserStatItem = ({ label, value, percentage, color, icon }) => (
 
 // Financial Metric Component
 const FinancialMetric = ({ label, value, count, color }) => (
-  <Box sx={{ textAlign: 'center', p: { xs: 1, md: 2 } }}>
+  <Box sx={{ textAlign: 'center', px: { xs: 1, md: 1.5 }, py: { xs: 0.5, md: 1 } }}>
     <Typography
       variant="h5"
       sx={{
@@ -673,14 +676,14 @@ const FinancialMetric = ({ label, value, count, color }) => (
 
 // Income Item Component
 const IncomeItem = ({ label, value, count, icon }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, backgroundColor: `${AppColors.BG_SECONDARY}50` }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 1.5 }, px: { xs: 1, md: 1.5 }, py: { xs: 0.5, md: 1 }, borderRadius: 2, backgroundColor: `${AppColors.BG_SECONDARY}50` }}>
     <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 40,
-        height: 40,
+        width: { xs: 25, md: 35 },
+        height: { xs: 25, md: 35 },
         borderRadius: 2,
         backgroundColor: `${AppColors.GOLD_DARK}20`,
         color: AppColors.GOLD_DARK,
@@ -728,13 +731,13 @@ const IncomeItem = ({ label, value, count, icon }) => (
 
 // Quick Stat Item Component
 const QuickStatItem = ({ label, value, color }) => (
-  <Box sx={{ textAlign: 'center', p: 2 }}>
+  <Box sx={{ textAlign: 'center', px: { xs: 1, md: 1.5 } }}>
     <Typography
       variant="h4"
       sx={{
         color: color,
         fontWeight: 700,
-        mb: 1,
+        mb: 0.5,
       }}
     >
       {value}

@@ -210,6 +210,7 @@ const Header = ({ onToggleSidebar }) => {
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               onClose={() => setOpenWidgets(false)}
+              onClick={() => setOpenWidgets(false)}
               slotProps={{
                 paper: {
                   elevation: 0,
@@ -247,7 +248,7 @@ const Header = ({ onToggleSidebar }) => {
                 <Box
                   onClick={() => {
                     navigate("/");
-                    setOpenWidgets(false);
+                    setIsSecondGame(false);
                   }}
                   sx={{
                     display: "flex",
@@ -340,8 +341,7 @@ const Header = ({ onToggleSidebar }) => {
                   onClick={() => {
                     setIsSecondGame(true);
                     navigate("/network/dashboard");
-                    setOpenWidgets(false);
-                  }}
+                    }}
                   sx={{
                     display: "flex",
                     flexDirection: "column",

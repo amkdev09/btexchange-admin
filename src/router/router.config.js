@@ -1,4 +1,4 @@
-import { Leaderboard, Person, AccountBalanceWallet, History } from "@mui/icons-material";
+import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn } from "@mui/icons-material";
 import asyncComponent from "../utils/asyncComponent.jsx";
 
 export const authRouters = [
@@ -57,7 +57,28 @@ export const protectedRouters2 = [
     inSidebarMenu: true,
     label: "Dashboard",
     icon: Leaderboard,
-    component: asyncComponent(() => import("../pages/network/index.jsx")),
+    component: asyncComponent(() => import("../pages/network/dashboard.jsx")),
+  },
+  {
+    path: "/network/manage-users",
+    inSidebarMenu: true,
+    label: "Manage Users",
+    icon: Person,
+    component: asyncComponent(() => import("../pages/network/manageUser/index.jsx")),
+  },
+  {
+    path: "/network/manage-funds",
+    inSidebarMenu: true,
+    label: "Manage Funds",
+    icon: AccountBalanceWallet,
+    component: asyncComponent(() => import("../pages/network/manageFund/index.jsx")),
+  },
+  {
+    path: "/network/manage-finance",
+    inSidebarMenu: true,  
+    label: "Manage Finance",
+    icon: MonetizationOn,
+    component: asyncComponent(() => import("../pages/network/manageFinance/index.jsx")),
   },
 ];
 

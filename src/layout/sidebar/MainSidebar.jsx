@@ -1,73 +1,20 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Box, Drawer, IconButton, Typography, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Collapse } from "@mui/material";
+import { Box, Drawer, IconButton, Typography, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import Leaderboard from "@mui/icons-material/Leaderboard";
-import Person from "@mui/icons-material/Person";
-import TrendingUp from "@mui/icons-material/TrendingUp";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import HistoryIcon from "@mui/icons-material/History";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
 import Close from "@mui/icons-material/Close";
 import { AppColors } from "../../constant/appColors";
 import { protectedRouters } from "../../router/router.config";
-
-const navItems = [
-  {
-    to: "/",
-    label: "Dashboard",
-    icon: Leaderboard,
-  },
-  {
-    to: "/manage-users",
-    label: "Manage Users",
-    icon: Person,
-  },
-  {
-    to: "/manage-trade",
-    label: "Manage Trade",
-    icon: TrendingUp,
-  },
-  {
-    to: "/fund-management",
-    label: "Fund Management",
-    icon: AccountBalanceWalletIcon,
-  },
-  {
-    label: "History",
-    icon: HistoryIcon,
-    children: [
-      {
-        to: "/history/trades",
-        label: "Trades History",
-      },
-      {
-        to: "/history/income",
-        label: "Income History",
-      },
-      {
-        to: "/history/deposits",
-        label: "Deposits History",
-      },
-      {
-        to: "/history/withdrawals",
-        label: "Withdrawals History",
-      },
-    ],
-  },
-];
+import { protectedRouters2 } from "../../router/router.config";
+import useAuth from "../../hooks/useAuth";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const theme = useTheme();
   const location = useLocation();
-  const [openHistory, setOpenHistory] = React.useState(false);
 
-  React.useEffect(() => {
-    // Check if any history route is active
-    const isHistoryActive = location.pathname.startsWith("/history/");
-    setOpenHistory(isHistoryActive);
-  }, [location.pathname]);
+  const { isSecondGame } = useAuth();
+
+  const asideItems = isSecondGame ? protectedRouters2 : protectedRouters;
 
   const drawerContent = (
     <Box sx={{ width: 256, height: "100%", display: "flex", flexDirection: "column" }}>
@@ -113,7 +60,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       </Box>
 
       <List sx={{ mt: 2, px: 1.5, flex: 1, overflowY: "auto" }}>
-        {protectedRouters?.filter((item) => item?.inSidebarMenu)?.map((item) => {
+        {asideItems?.filter((item) => item?.inSidebarMenu)?.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>

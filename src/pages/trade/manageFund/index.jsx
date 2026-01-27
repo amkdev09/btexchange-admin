@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
-  CircularProgress,
   Grid,
   Paper,
   TextField,
@@ -28,26 +27,23 @@ import {
   FileCopy,
   OpenInNew,
   SwapHoriz,
-  Warning,
-  CheckCircle,
-  Error as ErrorIcon,
   MonetizationOn
 } from '@mui/icons-material';
 import tradeService from '../../../services/tradeService';
 import { AppColors } from '../../../constant/appColors';
 import AddressDetailModal from '../../../components/AddressDetailModal';
 import useSnackbar from '../../../hooks/useSnackbar';
-import { 
-  formatAddress, 
-  formatBalance, 
-  formatCurrency, 
-  getChainConfig, 
+import {
+  formatAddress,
+  formatBalance,
+  formatCurrency,
+  getChainConfig,
   getExplorerUrl,
-  validateAddress,
   getBalanceStatus,
-  generateSweepRecommendations,
-  exportToCSV 
+  exportToCSV
 } from '../../../utils/fundUtils';
+import BTLoader from '../../../components/Loader';
+import BinanceIcon from '../../../assets/svg/binance.svg';
 
 const ManageFunds = () => {
   const { showSnackbar } = useSnackbar();
@@ -117,7 +113,7 @@ const ManageFunds = () => {
 
     setLoading(true);
     setSweepStatus(prev => ({ ...prev, [`${address}-${chain}`]: 'processing' }));
-    
+
     try {
       await tradeService.sweepAddress(address, chain, treasuryAddress);
       setSweepStatus(prev => ({ ...prev, [`${address}-${chain}`]: 'success' }));
@@ -164,14 +160,14 @@ const ManageFunds = () => {
   const handleExportData = () => {
     const exportData = [];
     exportData.push(['Chain', 'Address', 'Balance (USDT)', 'Status']);
-    
+
     chains.forEach(chain => {
       Object.entries(chainBalances[chain]).forEach(([address, balance]) => {
         const status = getBalanceStatus(balance);
         exportData.push([chain, address, formatBalance(balance), status.message]);
       });
     });
-    
+
     const filename = `fund_report_${new Date().toISOString().split('T')[0]}.csv`;
     exportToCSV(exportData, filename);
     showSnackbar('Data exported successfully', 'success');
@@ -180,8 +176,8 @@ const ManageFunds = () => {
   const renderOverview = () => (
     <Box>
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+      <Grid container spacing={{ xs: 1, md: 1.5 }} sx={{ mb: { xs: 1, md: 1.5 } }}>
+        <Grid size={{ xs: 6, lg: 3 }}>
           <MetricCard
             title="Total Balance"
             value={formatCurrency(getGrandTotalBalance())}
@@ -193,11 +189,11 @@ const ManageFunds = () => {
         {chains.map((chain) => {
           const config = getChainConfig(chain);
           return (
-            <Grid size={{ xs: 12, md: 6, lg: 3 }} key={chain}>
+            <Grid size={{ xs: 6, lg: 3 }} key={chain}>
               <MetricCard
                 title={`${chain} Balance`}
                 value={formatCurrency(getTotalBalance(chain))}
-                icon={<span style={{ fontSize: 20 }}>{config.icon}</span>}
+                icon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20, fill: AppColors.GOLD_DARK }} />}
                 trend="positive"
                 subtitle={`${Object.keys(chainBalances[chain]).length} addresses`}
               />
@@ -211,68 +207,56 @@ const ManageFunds = () => {
         title="Treasury Settings"
         subtitle="Configure central treasury address for sweep operations"
       >
-        <Grid container spacing={3} alignItems="end">
-          <Grid size={{ xs: 12, md: 8 }}>
-            <TextField
-              label="Treasury Address"
-              value={treasuryAddress}
-              onChange={(e) => setTreasuryAddress(e.target.value)}
-              placeholder="0x..."
-              fullWidth
-              variant="outlined"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: AppColors.BG_SECONDARY,
-                  '& fieldset': {
-                    borderColor: AppColors.BG_SECONDARY,
-                  },
-                  '&:hover fieldset': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: AppColors.GOLD_DARK,
-                  },
+        <Box sx={{ display: 'flex', flex: 'wrap', flexDirection: { xs: 'column', md: 'row' }, gap: 1 }}>
+          <TextField
+            label="Treasury Address"
+            value={treasuryAddress}
+            onChange={(e) => setTreasuryAddress(e.target.value)}
+            placeholder="0x..."
+            variant="outlined"
+            sx={{
+              flex: 1,
+              '& .MuiOutlinedInput-root': {
+                bgcolor: AppColors.BG_SECONDARY,
+                '& fieldset': {
+                  borderColor: AppColors.BG_SECONDARY,
                 },
-                '& .MuiInputLabel-root': {
-                  color: AppColors.TXT_SUB,
-                  '&.Mui-focused': {
-                    color: AppColors.GOLD_DARK,
-                  },
+                '&:hover fieldset': {
+                  borderColor: AppColors.GOLD_DARK,
                 },
-                '& .MuiInputBase-input': {
-                  color: AppColors.TXT_MAIN,
+                '&.Mui-focused fieldset': {
+                  borderColor: AppColors.GOLD_DARK,
                 },
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Button
-              onClick={loadChainBalances}
-              disabled={loading}
-              variant="contained"
-              startIcon={<Refresh />}
-              fullWidth
-              sx={{
-                bgcolor: AppColors.GOLD_DARK,
-                color: AppColors.BG_MAIN,
-                '&:hover': {
-                  bgcolor: AppColors.GOLD_LIGHT,
+              },
+              '& .MuiInputLabel-root': {
+                color: AppColors.TXT_SUB,
+                '&.Mui-focused': {
+                  color: AppColors.GOLD_DARK,
                 },
-                '&:disabled': {
-                  bgcolor: AppColors.BG_SECONDARY,
-                  color: AppColors.TXT_SUB,
-                },
-                py: 1.5
-              }}
-            >
-              {loading ? 'Refreshing...' : 'Refresh Balances'}
-            </Button>
-          </Grid>
-        </Grid>
+              },
+              '& .MuiInputBase-input': {
+                py: 1.5,
+                color: AppColors.TXT_MAIN,
+              },
+              '& .MuiFormLabel-root': {
+                lineHeight: 1,
+              }
+            }}
+          />
+          <Button
+            className='btn-primary'
+            onClick={loadChainBalances}
+            disabled={loading}
+            startIcon={<Refresh />
+            }
+          >
+            {loading ? 'Refreshing...' : 'Refresh Balances'}
+          </Button>
+        </Box>
       </DashboardCard>
 
       {/* Quick Actions */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
+      <Grid container spacing={{ xs: 1, md: 1.5 }} sx={{ mt: { xs: 1, md: 1.5 } }}>
         {chains.map((chain) => {
           const config = getChainConfig(chain);
           return (
@@ -283,20 +267,10 @@ const ManageFunds = () => {
               >
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Button
+                    className='btn-primary'
                     onClick={() => handleSweepAll(chain)}
                     disabled={loading || !treasuryAddress || getTotalBalance(chain) === 0}
-                    variant="contained"
                     startIcon={<SwapHoriz />}
-                    sx={{
-                      bgcolor: AppColors.ERROR,
-                      '&:hover': {
-                        bgcolor: `${AppColors.ERROR}CC`,
-                      },
-                      '&:disabled': {
-                        bgcolor: AppColors.BG_SECONDARY,
-                        color: AppColors.TXT_SUB,
-                      },
-                    }}
                   >
                     Sweep All ({Object.keys(chainBalances[chain]).length})
                   </Button>
@@ -330,8 +304,8 @@ const ManageFunds = () => {
   const renderManagement = () => (
     <Box>
       {/* Chain Selector */}
-      <Box sx={{ mb: 3 }}>
-        <Grid container spacing={2}>
+      <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
+        <Grid container spacing={{ xs: 1, md: 1.5 }}>
           {chains.map((chain) => {
             const config = getChainConfig(chain);
             const isActive = activeChain === chain;
@@ -366,7 +340,7 @@ const ManageFunds = () => {
         title={`${activeChain} Management`}
         subtitle={`${Object.keys(chainBalances[activeChain]).length} addresses • Total: ${formatCurrency(getTotalBalance(activeChain))}`}
       >
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 1, md: 1.5 }}>
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               label="Search Address"
@@ -406,10 +380,10 @@ const ManageFunds = () => {
       {/* Address List */}
       <DashboardCard
         title="Address List"
-        subtitle={`Showing ${Object.entries(chainBalances[activeChain]).filter(([address]) => 
+        subtitle={`Showing ${Object.entries(chainBalances[activeChain]).filter(([address]) =>
           !addressSearch || address.toLowerCase().includes(addressSearch.toLowerCase())
         ).length} addresses`}
-        sx={{ mt: 3 }}
+        sx={{ mt: { xs: 1, md: 1.5 } }}
       >
         <TableContainer>
           <Table>
@@ -431,14 +405,14 @@ const ManageFunds = () => {
             </TableHead>
             <TableBody>
               {Object.entries(chainBalances[activeChain])
-                .filter(([address]) => 
+                .filter(([address]) =>
                   !addressSearch || address.toLowerCase().includes(addressSearch.toLowerCase())
                 )
                 .map(([address, balance]) => {
                   const statusKey = `${address}-${activeChain}`;
                   const status = sweepStatus[statusKey];
                   const balanceStatus = getBalanceStatus(balance);
-                  
+
                   return (
                     <TableRow key={address} sx={{ '&:hover': { bgcolor: `${AppColors.BG_SECONDARY}50` } }}>
                       <TableCell>
@@ -480,19 +454,19 @@ const ManageFunds = () => {
                         <Chip
                           label={
                             status === 'success' ? 'Swept' :
-                            status === 'processing' ? 'Processing' :
-                            status === 'error' ? 'Error' :
-                            balanceStatus.message
+                              status === 'processing' ? 'Processing' :
+                                status === 'error' ? 'Error' :
+                                  balanceStatus.message
                           }
                           size="small"
                           color={
                             status === 'success' ? 'success' :
-                            status === 'processing' ? 'warning' :
-                            status === 'error' ? 'error' :
-                            balanceStatus.color === 'green' ? 'success' :
-                            balanceStatus.color === 'blue' ? 'info' :
-                            balanceStatus.color === 'yellow' ? 'warning' :
-                            'default'
+                              status === 'processing' ? 'warning' :
+                                status === 'error' ? 'error' :
+                                  balanceStatus.color === 'green' ? 'success' :
+                                    balanceStatus.color === 'blue' ? 'info' :
+                                      balanceStatus.color === 'yellow' ? 'warning' :
+                                        'default'
                           }
                           sx={{
                             '& .MuiChip-label': {
@@ -507,12 +481,12 @@ const ManageFunds = () => {
                             <IconButton
                               size="small"
                               onClick={() => handleViewDetails(address, activeChain)}
-                              sx={{ 
+                              sx={{
                                 bgcolor: `${AppColors.TXT_SUB}20`,
                                 color: AppColors.TXT_SUB,
-                                '&:hover': { 
+                                '&:hover': {
                                   bgcolor: `${AppColors.GOLD_DARK}20`,
-                                  color: AppColors.GOLD_DARK 
+                                  color: AppColors.GOLD_DARK
                                 }
                               }}
                             >
@@ -569,7 +543,7 @@ const ManageFunds = () => {
           bgcolor: AppColors.BG_MAIN
         }}
       >
-        <CircularProgress sx={{ color: AppColors.GOLD_DARK }} />
+        <BTLoader />
       </Box>
     );
   }
@@ -577,12 +551,12 @@ const ManageFunds = () => {
   return (
     <Box sx={{ bgcolor: AppColors.BG_MAIN, minHeight: "100vh" }}>
       {/* Header */}
-      <Box sx={{ mb: { xs: 2, md: 4 } }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', md: 'center' }, 
-          flexDirection: { xs: 'column', md: 'row' } 
+      <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' }
         }}>
           <Box>
             <Typography
@@ -590,7 +564,7 @@ const ManageFunds = () => {
               sx={{
                 fontWeight: 700,
                 color: AppColors.TXT_MAIN,
-                mb: 1,
+                mb: { xs: 0.5, md: 1 },
                 background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
@@ -609,12 +583,14 @@ const ManageFunds = () => {
               Manage treasury funds and user deposit addresses across multiple chains
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: { xs: 2, md: 0 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 1.5 }, mt: { xs: 1, md: 0 } }}>
             <Button
               onClick={handleExportData}
               variant="outlined"
               startIcon={<GetApp />}
               sx={{
+                px: { xs: 1, md: 1.5 },
+                py: { xs: 0.27, md: 0.5 },
                 borderColor: AppColors.GOLD_DARK,
                 color: AppColors.GOLD_DARK,
                 '&:hover': {
@@ -631,8 +607,8 @@ const ManageFunds = () => {
               sx={{
                 bgcolor: AppColors.BG_CARD,
                 border: `1px solid ${AppColors.BG_SECONDARY}`,
-                px: 2,
-                py: 1,
+                px: { xs: 1, md: 1.5 },
+                py: { xs: 0.5, md: 0.75 },
                 borderRadius: 2
               }}
             >
@@ -643,45 +619,38 @@ const ManageFunds = () => {
           </Box>
         </Box>
       </Box>
-
-      {/* Navigation Tabs */}
-      <Paper
-        elevation={0}
+      <Tabs
+        value={activeTab}
+        onChange={(e, newValue) => setActiveTab(newValue)}
         sx={{
           bgcolor: AppColors.BG_CARD,
           border: `1px solid ${AppColors.BG_SECONDARY}`,
           borderRadius: 3,
-          mb: 3
+          mb: { xs: 1, md: 1.5 },
+          '& .MuiTabs-indicator': {
+            backgroundColor: AppColors.GOLD_DARK,
+          },
+          '& .MuiTab-root': {
+            px: { xs: 1, md: 1.5 },
+            py: 0,
+            color: AppColors.TXT_SUB,
+            '&.Mui-selected': {
+              color: AppColors.GOLD_DARK,
+            },
+          },
         }}
       >
-        <Tabs
-          value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
-          sx={{
-            '& .MuiTabs-indicator': {
-              backgroundColor: AppColors.GOLD_DARK,
-            },
-            '& .MuiTab-root': {
-              color: AppColors.TXT_SUB,
-              '&.Mui-selected': {
-                color: AppColors.GOLD_DARK,
-              },
-            },
-          }}
-        >
-          <Tab
-            icon={<AccountBalanceWallet />}
-            label="Overview"
-            iconPosition="start"
-          />
-          <Tab
-            icon={<SwapHoriz />}
-            label="Manage Addresses"
-            iconPosition="start"
-          />
-        </Tabs>
-      </Paper>
-
+        <Tab
+          icon={<AccountBalanceWallet />}
+          label="Overview"
+          iconPosition="start"
+        />
+        <Tab
+          icon={<SwapHoriz />}
+          label="Manage Addresses"
+          iconPosition="start"
+        />
+      </Tabs>
       {/* Content */}
       <Box>
         {activeTab === 0 ? renderOverview() : renderManagement()}
@@ -706,13 +675,13 @@ const DashboardCard = ({ title, subtitle, children, sx = {} }) => (
       backgroundColor: AppColors.BG_CARD,
       border: `1px solid ${AppColors.BG_SECONDARY}`,
       borderRadius: 3,
-      p: { xs: 2, md: 3 },
+      p: { xs: 1, md: 1.5 },
       height: '100%',
       background: `linear-gradient(135deg, ${AppColors.BG_CARD} 0%, ${AppColors.BG_SECONDARY} 100%)`,
       ...sx
     }}
   >
-    <Box sx={{ mb: { xs: 2, md: 3 } }}>
+    <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
       <Typography
         variant="h6"
         sx={{
@@ -745,7 +714,7 @@ const MetricCard = ({ title, value, icon, trend, subtitle }) => (
       backgroundColor: AppColors.BG_CARD,
       border: `1px solid ${AppColors.BG_SECONDARY}`,
       borderRadius: 3,
-      p: { xs: 2, md: 3 },
+      p: { xs: 1, md: 1.5 },
       position: 'relative',
       overflow: 'hidden',
       '&::before': {
@@ -759,7 +728,7 @@ const MetricCard = ({ title, value, icon, trend, subtitle }) => (
       },
     }}
   >
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: { xs: 1, md: 2 } }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: { xs: 0.5, md: 1 } }}>
       <Box>
         <Typography
           variant="h4"
