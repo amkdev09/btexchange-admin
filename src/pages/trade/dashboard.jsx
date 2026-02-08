@@ -1,14 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Typography,
   Box,
-  CircularProgress,
   Grid,
   LinearProgress,
   Divider,
   Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import {
   TrendingUp,
   AccountBalance,
@@ -20,41 +28,118 @@ import {
   Block,
   ShowChart,
   Person,
+  Add,
 } from "@mui/icons-material";
 import useSnackbar from "../../hooks/useSnackbar";
 import { AppColors } from "../../constant/appColors";
 import tradeService from "../../services/tradeService";
 import BTLoader from "../../components/Loader";
+import dayjs from "dayjs";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { Formik } from "formik";
+import * as yup from "yup";
+import networkService from "../../services/networkService";
+
+const createTradeInitialValues = {
+  pair: "BTC-USD",
+  direction: "UP",
+  grossAmount: "",
+  feeAmount: "",
+  netTradeAmount: "",
+  entryPrice: "",
+  exitPrice: "",
+  payout: "",
+  status: "WIN",
+  startTime: null,
+  expiryTime: null,
+};
+
+const requiredNumber = (label) =>
+  yup
+    .number()
+    .min(0, "Must be ≥ 0")
+    .required(`${label} is required`)
+    .transform((v) => (v === "" || v === null || isNaN(v) ? undefined : Number(v)));
+
+const createTradeValidationSchema = yup.object({
+  pair: yup.string().required("Trading pair is required").trim(),
+  direction: yup
+    .string()
+    .oneOf(["UP", "DOWN"], "Direction must be UP or DOWN")
+    .required("Direction is required"),
+  grossAmount: requiredNumber("Gross amount"),
+  feeAmount: requiredNumber("Fee amount"),
+  netTradeAmount: requiredNumber("Net trade amount"),
+  entryPrice: requiredNumber("Entry price"),
+  exitPrice: requiredNumber("Exit price"),
+  payout: requiredNumber("Payout"),
+  status: yup
+    .string()
+    .oneOf(["OPEN", "WIN", "LOSS"], "Status must be OPEN, WIN, or LOSS")
+    .required("Status is required"),
+  startTime: yup.mixed().required("Start time is required"),
+  expiryTime: yup.mixed().required("Expiry time is required"),
+});
 
 const AdminDashboard = () => {
-  const theme = useTheme();
   const { showSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
+  const [createTradeDialogOpen, setCreateTradeDialogOpen] = useState(false);
+  const [createTradeSubmitting, setCreateTradeSubmitting] = useState(false);
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await tradeService.getDashboard();
+      if (response.success) {
+        setDashboardData(response.data);
+      } else {
+        showSnackbar("Failed to load dashboard data", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard:", error);
+      showSnackbar(
+        error.response?.data?.message || "Failed to load dashboard data",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [showSnackbar]);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        const response = await tradeService.getDashboard();
-        if (response.success) {
-          setDashboardData(response.data);
-        } else {
-          showSnackbar("Failed to load dashboard data", "error");
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard:", error);
-        showSnackbar(
-          error.response?.data?.message || "Failed to load dashboard data",
-          "error"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboard();
-  }, [showSnackbar]);
+  }, [fetchDashboard]);
+
+  const buildCreateTradePayload = (values) => {
+    const {
+      pair,
+      direction,
+      grossAmount,
+      feeAmount,
+      netTradeAmount,
+      entryPrice,
+      exitPrice,
+      payout,
+      status,
+      startTime,
+      expiryTime,
+    } = values;
+    return {
+      pair: pair.trim(),
+      direction,
+      ...(grossAmount !== "" && grossAmount != null && { grossAmount: Number(grossAmount) }),
+      ...(feeAmount !== "" && feeAmount != null && { feeAmount: Number(feeAmount) }),
+      ...(netTradeAmount !== "" && netTradeAmount != null && { netTradeAmount: Number(netTradeAmount) }),
+      ...(entryPrice !== "" && entryPrice != null && { entryPrice: Number(entryPrice) }),
+      ...(exitPrice !== "" && exitPrice != null && { exitPrice: Number(exitPrice) }),
+      ...(payout !== "" && payout != null && { payout: Number(payout) }),
+      ...(status && { status }),
+      ...(startTime && dayjs(startTime).isValid() && { startTime: dayjs(startTime).toISOString() }),
+      ...(expiryTime && dayjs(expiryTime).isValid() && { expiryTime: dayjs(expiryTime).toISOString() }),
+    };
+  };
 
   if (loading) {
     return (
@@ -99,30 +184,54 @@ const AdminDashboard = () => {
   return (
     <Box >
       {/* MainHeader */}
-      <Box sx={{ mb: { xs: 1, md: 1.5 } }}>
-        <Typography
-          variant="h4"
+      <Box
+        sx={{
+          mb: { xs: 1, md: 1.5 },
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: { md: "center" },
+          justifyContent: "space-between",
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: AppColors.TXT_MAIN,
+              background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Admin Dashboard
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: AppColors.TXT_SUB,
+              fontWeight: 400,
+            }}
+          >
+            Comprehensive overview of trading platform performance and user analytics
+          </Typography>
+        </Box>
+        <Button
+          className="btn-primary"
+          onClick={() => setCreateTradeDialogOpen(true)}
+          startIcon={<Add />}
           sx={{
-            fontWeight: 700,
-            color: AppColors.TXT_MAIN,
-            mb: { xs: 1, md: 1.5 },
-            background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            alignSelf: { xs: "stretch", md: "center" },
+            color: AppColors.BG_MAIN,
+            "&:hover": {
+              color: AppColors.BG_MAIN,
+            },
           }}
         >
-          Admin Dashboard
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: AppColors.TXT_SUB,
-            fontWeight: 400
-          }}
-        >
-          Comprehensive overview of trading platform performance and user analytics
-        </Typography>
+          Create Trade Data
+        </Button>
       </Box>
 
       {/* Key Metrics Overview */}
@@ -473,6 +582,288 @@ const AdminDashboard = () => {
           </DashboardCard>
         </Grid>
       </Grid>
+
+      {/* Create Trade Data Dialog */}
+      <Dialog
+        open={createTradeDialogOpen}
+        onClose={() => !createTradeSubmitting && setCreateTradeDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: AppColors.BG_CARD,
+            border: `1px solid ${AppColors.BG_SECONDARY}`,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <Formik
+          initialValues={createTradeInitialValues}
+          validationSchema={createTradeValidationSchema}
+          onSubmit={async (values, { setSubmitting, resetForm }) => {
+            setCreateTradeSubmitting(true);
+            try {
+              const payload = buildCreateTradePayload(values);
+              const res = await tradeService.createTradeData(payload);
+              showSnackbar(res?.message || "Dummy trade data created successfully", "success");
+              resetForm();
+              setCreateTradeDialogOpen(false);
+              fetchDashboard();
+            } catch (err) {
+              showSnackbar(
+                err?.message || err?.data?.message || "Failed to create trade data",
+                "error"
+              );
+            } finally {
+              setSubmitting(false);
+              setCreateTradeSubmitting(false);
+            }
+          }}
+        >
+          {({
+            values,
+            errors,
+            touched,
+            handleChange,
+            handleBlur,
+            setFieldValue,
+            handleSubmit,
+            isSubmitting,
+            resetForm,
+          }) => {
+            const submitting = isSubmitting || createTradeSubmitting;
+            const fieldSx = {
+              "& .MuiOutlinedInput-root": { bgcolor: "transparent" },
+              "& .MuiInputLabel-root": { color: AppColors.TXT_SUB },
+              "& .MuiOutlinedInput-input": { color: AppColors.TXT_MAIN },
+            };
+            return (
+              <>
+                <DialogTitle
+                  sx={{
+                    color: AppColors.GOLD_DARK,
+                    fontWeight: 600,
+                    borderBottom: `1px solid ${AppColors.HLT_NONE}40`,
+                    pb: 1.5,
+                  }}
+                >
+                  Create Trade Data
+                </DialogTitle>
+                <DialogContent sx={{ background: `linear-gradient(135deg, ${AppColors.BG_CARD} 20%, ${AppColors.BG_SECONDARY} 100%)`, backgroundColor: AppColors.BG_CARD }}>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          required
+                          name="pair"
+                          label="Trading Pair"
+                          placeholder="e.g. BTC-USD, ETH-USD"
+                          value={values.pair}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.pair && Boolean(errors.pair)}
+                          helperText={touched.pair && errors.pair}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FormControl
+                          fullWidth
+                          required
+                          error={touched.direction && Boolean(errors.direction)}
+                          sx={{ "& .MuiOutlinedInput-root": { bgcolor: "transparent" } }}
+                        >
+                          <InputLabel sx={{ color: AppColors.TXT_SUB }}>Direction</InputLabel>
+                          <Select
+                            name="direction"
+                            value={values.direction}
+                            onChange={(e) => setFieldValue("direction", e.target.value)}
+                            onBlur={handleBlur}
+                            label="Direction"
+                            sx={{ color: AppColors.TXT_MAIN }}
+                          >
+                            <MenuItem value="UP">UP</MenuItem>
+                            <MenuItem value="DOWN">DOWN</MenuItem>
+                          </Select>
+                          {touched.direction && errors.direction && (
+                            <Typography variant="caption" sx={{ color: AppColors.ERROR, mt: 0.5, display: "block" }}>
+                              {errors.direction}
+                            </Typography>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          name="grossAmount"
+                          label="Gross Amount"
+                          value={values.grossAmount}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.grossAmount && Boolean(errors.grossAmount)}
+                          helperText={touched.grossAmount && errors.grossAmount}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          name="feeAmount"
+                          label="Fee Amount"
+                          value={values.feeAmount}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.feeAmount && Boolean(errors.feeAmount)}
+                          helperText={touched.feeAmount && errors.feeAmount}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          name="netTradeAmount"
+                          label="Net Trade Amount"
+                          value={values.netTradeAmount}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.netTradeAmount && Boolean(errors.netTradeAmount)}
+                          helperText={touched.netTradeAmount && errors.netTradeAmount}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          name="payout"
+                          label="Payout"
+                          value={values.payout}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.payout && Boolean(errors.payout)}
+                          helperText={touched.payout && errors.payout}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          name="entryPrice"
+                          label="Entry Price"
+                          value={values.entryPrice}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.entryPrice && Boolean(errors.entryPrice)}
+                          helperText={touched.entryPrice && errors.entryPrice}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          name="exitPrice"
+                          label="Exit Price"
+                          value={values.exitPrice}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.exitPrice && Boolean(errors.exitPrice)}
+                          helperText={touched.exitPrice && errors.exitPrice}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          sx={fieldSx}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FormControl
+                          fullWidth
+                          error={touched.status && Boolean(errors.status)}
+                          sx={{ "& .MuiOutlinedInput-root": { bgcolor: "transparent" } }}
+                        >
+                          <InputLabel sx={{ color: AppColors.TXT_SUB }}>Status</InputLabel>
+                          <Select
+                            name="status"
+                            value={values.status}
+                            onChange={(e) => setFieldValue("status", e.target.value)}
+                            onBlur={handleBlur}
+                            label="Status"
+                            sx={{ color: AppColors.TXT_MAIN }}
+                          >
+                            <MenuItem value="OPEN">OPEN</MenuItem>
+                            <MenuItem value="WIN">WIN</MenuItem>
+                            <MenuItem value="LOSS">LOSS</MenuItem>
+                          </Select>
+                          {touched.status && errors.status && (
+                            <Typography variant="caption" sx={{ color: AppColors.ERROR, mt: 0.5, display: "block" }}>
+                              {errors.status}
+                            </Typography>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <DateTimePicker
+                          label="Start Time"
+                          value={values.startTime}
+                          onChange={(v) => setFieldValue("startTime", v)}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              sx: fieldSx,
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <DateTimePicker
+                          label="Expiry Time"
+                          value={values.expiryTime}
+                          onChange={(v) => setFieldValue("expiryTime", v)}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              sx: fieldSx,
+                            },
+                          }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${AppColors.HLT_NONE}40` }}>
+                  <Button
+                    onClick={() => {
+                      if (!submitting) {
+                        resetForm();
+                        setCreateTradeDialogOpen(false);
+                      }
+                    }}
+                    disabled={submitting}
+                    sx={{ color: AppColors.TXT_SUB, "&:hover": { bgcolor: `${AppColors.HLT_NONE}20` } }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="btn-primary"
+                    onClick={() => handleSubmit()}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Creating..." : "Create"}
+                  </Button>
+                </DialogActions>
+              </>
+            );
+          }}
+        </Formik>
+      </Dialog>
     </Box>
   );
 };
@@ -585,7 +976,7 @@ const MetricCard = ({ title, value, icon, trend, subtitle }) => (
 // User Statistics Item
 const UserStatItem = ({ label, value, percentage, color, icon }) => (
   <Box sx={{ textAlign: 'left', px: { xs: 1, md: 1.5 }, py: { xs: 0.5, md: 1 } }}>
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 0.5, md: 1 } , mb: { xs: 0.5, md: 1 } }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 0.5, md: 1 }, mb: { xs: 0.5, md: 1 } }}>
       <Box
         sx={{
           display: 'inline-flex',

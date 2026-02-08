@@ -61,6 +61,17 @@ const networkService = {
     const response = await networkApi.post(`${BASE_URL}/funds/sweep-all`, data);
     return response.data;
   },
+
+  // ROI Settings (admin default rate for new investments)
+  getRoiSettings: async () => {
+    const response = await networkApi.get(`${BASE_URL}/settings/roi`);
+    return response.data;
+  },
+
+  setRoiSettings: async (data) => {
+    const response = await networkApi.put(`${BASE_URL}/settings/roi`, data);
+    return response.data;
+  },
 };
 
 export default networkService;

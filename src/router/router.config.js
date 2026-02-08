@@ -1,4 +1,4 @@
-import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn } from "@mui/icons-material";
+import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn, CandlestickChart, Settings } from "@mui/icons-material";
 import asyncComponent from "../utils/asyncComponent.jsx";
 
 export const authRouters = [
@@ -79,6 +79,20 @@ export const protectedRouters2 = [
     label: "Manage Finance",
     icon: MonetizationOn,
     component: asyncComponent(() => import("../pages/network/manageFinance/index.jsx")),
+  },
+  {
+    path: "/network/trade-data",
+    inSidebarMenu: true,
+    label: "Trade Data",
+    icon: CandlestickChart,
+    component: asyncComponent(() => import("../pages/network/TradeData/index.jsx")),
+  },
+  {
+    path: "/network/roi-settings",
+    inSidebarMenu: true,
+    label: "ROI Settings",
+    icon: Settings,
+    component: asyncComponent(() => import("../pages/network/roiSettings/index.jsx")),
   },
 ];
 

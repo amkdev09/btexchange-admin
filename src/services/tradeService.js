@@ -83,7 +83,15 @@ const tradeService = {
       params: { address, chain }
     });
     return response.data;
-  }
+  },
+  createTradeData: async (payload) => {
+    const response = await api.post(`${BASE_URL}/trade-data`, payload);
+    return response.data;
+  },
+  getTradeData: async (params = {}) => {
+    const response = await api.get(`${BASE_URL}/get-trade-data`, { params });
+    return response.data;
+  },
 };
 
 export default tradeService;

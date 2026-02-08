@@ -772,7 +772,9 @@ const ManageHistoryNLogs = () => {
                 }
               }}
             >
-              {exportLoading ? 'Exporting...' : 'Export CSV'}
+              <Typography variant="body2" sx={{ color: AppColors.GOLD_DARK }}>
+                {exportLoading ? 'Exporting...' : 'Export CSV'}
+              </Typography>
             </Button>
             <Paper
               elevation={0}
@@ -780,13 +782,14 @@ const ManageHistoryNLogs = () => {
                 bgcolor: AppColors.BG_CARD,
                 border: `1px solid ${AppColors.BG_SECONDARY}`,
                 px: { xs: 1, md: 1.5 },
-                py: { xs: 0.5, md: 0.75 },
+                py: { xs: 0.27, md: 0.5 },
                 borderRadius: 2,
                 display: 'flex',
+                alignItems: 'center',
                 gap: { xs: 0.5, md: 1 },
               }}
             >
-              <Typography variant="caption" sx={{ color: AppColors.TXT_SUB }}>
+              <Typography variant="body2" sx={{ color: AppColors.TXT_SUB }}>
                 Total Records
               </Typography>
               <Typography variant="h6" sx={{ color: AppColors.GOLD_DARK, fontWeight: 600 }}>

@@ -600,7 +600,9 @@ const ManageFunds = () => {
                 }
               }}
             >
-              Export
+              <Typography variant="body2" sx={{ color: AppColors.GOLD_DARK }}>
+                Export
+              </Typography>
             </Button>
             <Paper
               elevation={0}
@@ -608,7 +610,7 @@ const ManageFunds = () => {
                 bgcolor: AppColors.BG_CARD,
                 border: `1px solid ${AppColors.BG_SECONDARY}`,
                 px: { xs: 1, md: 1.5 },
-                py: { xs: 0.5, md: 0.75 },
+                py: { xs: 0.27, md: 0.5 },
                 borderRadius: 2
               }}
             >

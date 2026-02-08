@@ -122,7 +122,7 @@ const MainHeader = ({ onToggleSidebar }) => {
               Administrator
             </Typography>
             <Typography variant="caption" sx={{ color: theme.palette.text.secondary, lineHeight: 1 }}>
-              {isSecondGame ? "Network Game" : "Trade Game"}
+              {isSecondGame ? "Network Panel" : "Trade Panel"}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -246,7 +246,7 @@ const MainHeader = ({ onToggleSidebar }) => {
                   alignItems: "flex-start",
                 }}
               >
-                {/* Trade Game Profile Card */}
+                {/* Trade Panel Profile Card */}
                 <Box
                   onClick={() => {
                     navigate("/");
@@ -308,7 +308,7 @@ const MainHeader = ({ onToggleSidebar }) => {
                       letterSpacing: "0.02em",
                     }}
                   >
-                    Trade Game
+                    Trade Panel
                   </Typography>
                   {!isSecondGame && (
                     <Box
@@ -338,7 +338,7 @@ const MainHeader = ({ onToggleSidebar }) => {
                   )}
                 </Box>
 
-                {/* Network Game Profile Card */}
+                {/* Network Panel Profile Card */}
                 <Box
                   onClick={() => {
                     setIsSecondGame(true);
@@ -400,7 +400,7 @@ const MainHeader = ({ onToggleSidebar }) => {
                       letterSpacing: "0.02em",
                     }}
                   >
-                    Network Game
+                    Network Panel
                   </Typography>
                   {isSecondGame && (
                     <Box
