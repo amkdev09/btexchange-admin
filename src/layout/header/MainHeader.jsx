@@ -7,7 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useAuth2 } from "../../hooks/useAuth2";
 import MenuIcon from "@mui/icons-material/Menu";
 import WidgetsOutlined from "@mui/icons-material/WidgetsOutlined";
-import BebitLogo from "../../assets/svg/Bebit.svg";
+import BebitLogo from "../../assets/images/btLogo.webp";
 import TradeGameIcon from "../../assets/images/tradeGame.png";
 import NetworkGameIcon from "../../assets/images/networkGame.png";
 import Logout from "@mui/icons-material/Logout";
