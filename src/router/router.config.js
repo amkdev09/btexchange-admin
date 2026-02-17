@@ -1,4 +1,4 @@
-import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn, CandlestickChart, Settings } from "@mui/icons-material";
+import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn, CandlestickChart, Settings, Telegram, AttachMoney, NotificationsNoneOutlined } from "@mui/icons-material";
 import asyncComponent from "../utils/asyncComponent.jsx";
 
 export const authRouters = [
@@ -49,6 +49,35 @@ export const protectedRouters = [
     icon: History,
     component: asyncComponent(() => import("../pages/trade/manageHistoryNLogs/index.jsx")),
   },
+  {
+    inSidebarMenu: true,
+    label: "Control Center",
+    icon: Settings,
+  },
+  {
+    path: "/control-center/telegram-links",
+    inSidebarMenu: true,
+    parentLabel: "Control Center",
+    label: "Telegram Links",
+    icon: Telegram,
+    component: asyncComponent(() => import("../pages/trade/telegramLinks/index.jsx")),
+  },
+  {
+    path: "/control-center/bet-profit",
+    inSidebarMenu: true,
+    parentLabel: "Control Center",
+    label: "Bet Profit",
+    icon: AttachMoney,
+    component: asyncComponent(() => import("../pages/trade/betProfit/index.jsx")),
+  },
+  {
+    path: "/control-center/notifications",
+    inSidebarMenu: true,
+    parentLabel: "Control Center",
+    label: "Notifications",
+    icon: NotificationsNoneOutlined,
+    component: asyncComponent(() => import("../pages/trade/notifications/index.jsx")),
+  }
 ];
 
 export const protectedRouters2 = [
@@ -75,7 +104,7 @@ export const protectedRouters2 = [
   },
   {
     path: "/network/manage-finance",
-    inSidebarMenu: true,  
+    inSidebarMenu: true,
     label: "Manage Finance",
     icon: MonetizationOn,
     component: asyncComponent(() => import("../pages/network/manageFinance/index.jsx")),

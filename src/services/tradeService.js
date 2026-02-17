@@ -92,6 +92,40 @@ const tradeService = {
     const response = await api.get(`${BASE_URL}/get-trade-data`, { params });
     return response.data;
   },
+
+  // Bet profit config
+  getBetConfig: async () => {
+    const response = await api.get(`${BASE_URL}/bet-config`);
+    return response.data;
+  },
+  setBetProfit: async (body) => {
+    const response = await api.put(`${BASE_URL}/setProfit`, body);
+    return response.data;
+  },
+
+  // Notifications
+  getNotifications: async (params = {}) => {
+    const response = await api.get(`${BASE_URL}/notifications`, { params });
+    return response.data;
+  },
+  createNotification: async (body) => {
+    const response = await api.post(`${BASE_URL}/notifications`, body);
+    return response.data;
+  },
+  deleteNotification: async (id) => {
+    const response = await api.delete(`${BASE_URL}/notifications/${id}`);
+    return response.data;
+  },
+
+  // Social config (Telegram, Twitter, Instagram, Facebook)
+  getSocialConfig: async () => {
+    const response = await api.get(`${BASE_URL}/social-config`);
+    return response.data;
+  },
+  updateSocialConfig: async (body) => {
+    const response = await api.put(`${BASE_URL}/social-config`, body);
+    return response.data;
+  },
 };
 
 export default tradeService;
