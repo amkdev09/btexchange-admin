@@ -10,26 +10,16 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  Divider,
   InputAdornment,
 } from '@mui/material';
-import {
-  Telegram,
-  X as XIcon,
-  Instagram,
-  Facebook,
-  Link as LinkIcon,
-  InfoOutlined,
-} from '@mui/icons-material';
+import { Telegram, Groups as GroupsIcon, InfoOutlined } from '@mui/icons-material';
 import { AppColors } from '../../../constant/appColors';
 import useSnackbar from '../../../hooks/useSnackbar';
 import tradeService from '../../../services/tradeService';
 
-const SOCIAL_FIELDS = [
-  { key: 'telegramUrl', label: 'Telegram', placeholder: 'https://t.me/your_channel', Icon: Telegram },
-  { key: 'twitterUrl', label: 'X (Twitter)', placeholder: 'https://x.com/your_handle', Icon: XIcon },
-  { key: 'instagramUrl', label: 'Instagram', placeholder: 'https://instagram.com/your_page', Icon: Instagram },
-  { key: 'facebookUrl', label: 'Facebook', placeholder: 'https://facebook.com/your_page', Icon: Facebook },
+const TELEGRAM_FIELDS = [
+  { key: 'telegramUrl', label: 'Telegram channel / bot', placeholder: 'https://t.me/your_channel', Icon: Telegram },
+  { key: 'groupTelegramUrl', label: 'Telegram group', placeholder: 'https://t.me/your_group', Icon: GroupsIcon },
 ];
 
 const TelegramLinksPage = () => {
@@ -39,9 +29,7 @@ const TelegramLinksPage = () => {
   const [config, setConfig] = useState({});
   const [form, setForm] = useState({
     telegramUrl: '',
-    twitterUrl: '',
-    instagramUrl: '',
-    facebookUrl: '',
+    groupTelegramUrl: '',
   });
   const [error, setError] = useState(null);
 
@@ -55,9 +43,7 @@ const TelegramLinksPage = () => {
         setConfig(data);
         setForm({
           telegramUrl: data.telegramUrl ?? '',
-          twitterUrl: data.twitterUrl ?? '',
-          instagramUrl: data.instagramUrl ?? '',
-          facebookUrl: data.facebookUrl ?? '',
+          groupTelegramUrl: data.groupTelegramUrl ?? '',
         });
       } else {
         setError(response?.message || 'Failed to load social config');
@@ -87,19 +73,17 @@ const TelegramLinksPage = () => {
       setError(null);
       const body = {
         telegramUrl: form.telegramUrl?.trim() || '',
-        twitterUrl: form.twitterUrl?.trim() || '',
-        instagramUrl: form.instagramUrl?.trim() || '',
-        facebookUrl: form.facebookUrl?.trim() || '',
+        groupTelegramUrl: form.groupTelegramUrl?.trim() || '',
       };
       const response = await tradeService.updateSocialConfig(body);
       if (response?.success) {
         setConfig(response.data ?? body);
-        showSnackbar(response.message || 'Social links updated successfully', 'success');
+        showSnackbar(response.message || 'Telegram links updated successfully', 'success');
       } else {
         showSnackbar(response?.message || 'Failed to update', 'error');
       }
     } catch (err) {
-      const msg = err?.message || err?.data?.message || 'Failed to update social links';
+      const msg = err?.message || err?.data?.message || 'Failed to update Telegram links';
       showSnackbar(msg, 'error');
       setError(msg);
     } finally {
@@ -130,17 +114,17 @@ const TelegramLinksPage = () => {
           sx={{
             fontWeight: 700,
             color: AppColors.TXT_MAIN,
-            background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
+            background: `linear-gradient(90deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.02em',
           }}
         >
-          Telegram & Social Links
+          Telegram Links
         </Typography>
-        <Typography variant="body1" sx={{ color: AppColors.TXT_SUB, fontWeight: 400 }}>
-          Set official Telegram, X (Twitter), Instagram, and Facebook URLs. Users see these on the
-          platform. Leave empty to hide a link.
+        <Typography variant="body1" sx={{ color: AppColors.TXT_SUB, fontWeight: 400, mt: 0.5 }}>
+          Set your official Telegram channel and group URLs. Leave empty to hide a link.
         </Typography>
       </Box>
 
@@ -153,24 +137,62 @@ const TelegramLinksPage = () => {
               border: `1px solid ${AppColors.BG_SECONDARY}`,
               borderRadius: 2,
               height: '100%',
+              transition: 'border-color 0.2s ease',
+              '&:hover': { borderColor: AppColors.HLT_LIGHT },
             }}
           >
             <CardContent sx={{ py: 3, px: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <LinkIcon sx={{ color: AppColors.GOLD_DARK, fontSize: 28 }} />
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: AppColors.TXT_SUB, textTransform: 'uppercase' }}
+              <Typography
+                variant="overline"
+                sx={{
+                  color: AppColors.GOLD_DARK,
+                  fontWeight: 600,
+                  letterSpacing: 1.2,
+                  display: 'block',
+                  mb: 2,
+                }}
+              >
+                Current links
+              </Typography>
+              {TELEGRAM_FIELDS.map(({ key, label, Icon }) => (
+                <Box
+                  key={key}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    py: 1.25,
+                    borderBottom: key === 'telegramUrl' ? `1px solid ${AppColors.BG_SECONDARY}` : 'none',
+                  }}
                 >
-                  Current links
-                </Typography>
-              </Box>
-              {SOCIAL_FIELDS.map(({ key, label, Icon }) => (
-                <Box key={key} sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Icon sx={{ color: AppColors.GOLD_DARK, fontSize: 20 }} />
-                  <Typography variant="body2" sx={{ color: AppColors.TXT_SUB }}>
-                    {label}: {config[key] ? 'Set' : '—'}
-                  </Typography>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      bgcolor: AppColors.HLT_LIGHT,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Icon sx={{ color: AppColors.GOLD_DARK, fontSize: 20 }} />
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, fontSize: '0.75rem' }}>
+                      {label}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: config[key] ? AppColors.TXT_MAIN : AppColors.TXT_SUB,
+                        fontWeight: config[key] ? 500 : 400,
+                      }}
+                      noWrap
+                    >
+                      {config[key] ? 'Configured' : 'Not set'}
+                    </Typography>
+                  </Box>
                 </Box>
               ))}
             </CardContent>
@@ -187,6 +209,8 @@ const TelegramLinksPage = () => {
               border: `1px solid ${AppColors.BG_SECONDARY}`,
               borderRadius: 2,
               p: 3,
+              transition: 'border-color 0.2s ease',
+              '&:hover': { borderColor: AppColors.HLT_LIGHT },
             }}
           >
             {error && (
@@ -197,6 +221,7 @@ const TelegramLinksPage = () => {
                   mb: 2,
                   bgcolor: `${AppColors.ERROR}14`,
                   color: AppColors.ERROR,
+                  borderRadius: 1.5,
                   '& .MuiAlert-icon': { color: AppColors.ERROR },
                 }}
               >
@@ -206,12 +231,12 @@ const TelegramLinksPage = () => {
 
             <Typography
               variant="subtitle1"
-              sx={{ color: AppColors.TXT_MAIN, fontWeight: 600, mb: 2 }}
+              sx={{ color: AppColors.TXT_MAIN, fontWeight: 600, mb: 2.5 }}
             >
-              Update social links
+              Update Telegram links
             </Typography>
 
-            {SOCIAL_FIELDS.map(({ key, label, placeholder, Icon }) => (
+            {TELEGRAM_FIELDS.map(({ key, label, placeholder, Icon }) => (
               <TextField
                 key={key}
                 fullWidth
@@ -228,9 +253,9 @@ const TelegramLinksPage = () => {
                   sx: {
                     bgcolor: AppColors.BG_SECONDARY,
                     borderRadius: 2,
-                    '& fieldset': { borderColor: AppColors.BG_SECONDARY },
-                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK },
-                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK + '40' },
+                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK, borderWidth: 1 },
                   },
                 }}
                 InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
@@ -238,25 +263,35 @@ const TelegramLinksPage = () => {
               />
             ))}
 
-            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <InfoOutlined sx={{ fontSize: 18, color: AppColors.TXT_SUB }} />
-              <Typography variant="caption" sx={{ color: AppColors.TXT_SUB }}>
-                Use full URLs (e.g. https://t.me/channel). Empty fields will not be shown to users.
+            <Box
+              sx={{
+                mt: 2,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: AppColors.BG_SECONDARY + '80',
+              }}
+            >
+              <InfoOutlined sx={{ fontSize: 18, color: AppColors.TXT_SUB, mt: 0.25, flexShrink: 0 }} />
+              <Typography variant="caption" sx={{ color: AppColors.TXT_SUB, lineHeight: 1.5 }}>
+                Use full URLs (e.g. https://t.me/your_channel). Empty fields will not be shown to users.
               </Typography>
             </Box>
 
-            <Divider sx={{ borderColor: AppColors.BG_SECONDARY, my: 3 }} />
-
-            <Button className="btn-primary" type="submit" disabled={saving}>
-              {saving ? (
-                <>
-                  <CircularProgress size={20} sx={{ color: 'inherit', mr: 1 }} />
-                  Saving…
-                </>
-              ) : (
-                'Save social links'
-              )}
-            </Button>
+            <Box sx={{ mt: 3 }}>
+              <Button className="btn-primary" type="submit" disabled={saving}>
+                {saving ? (
+                  <>
+                    <CircularProgress size={20} sx={{ color: 'inherit', mr: 1 }} />
+                    Saving…
+                  </>
+                ) : (
+                  'Save Telegram links'
+                )}
+              </Button>
+            </Box>
           </Paper>
         </Grid>
       </Grid>

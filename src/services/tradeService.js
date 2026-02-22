@@ -126,6 +126,10 @@ const tradeService = {
     const response = await api.put(`${BASE_URL}/social-config`, body);
     return response.data;
   },
+  dummyDeposit: async (body) => {
+    const response = await api.post(`${BASE_URL}/users/dummy-deposit`, body);
+    return response.data;
+  },
 };
 
 export default tradeService;

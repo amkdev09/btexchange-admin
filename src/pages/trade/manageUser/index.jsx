@@ -27,6 +27,7 @@ import {
   Avatar,
   Stack,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Search,
@@ -40,6 +41,7 @@ import {
   Close,
   Check,
   Restore,
+  AccountBalanceWallet,
 } from '@mui/icons-material';
 import { AppColors } from '../../../constant/appColors';
 import useSnackbar from '../../../hooks/useSnackbar';
@@ -71,6 +73,12 @@ const ManageUsers = () => {
 
   // Action state
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Dummy Deposit modal
+  const [dummyDepositOpen, setDummyDepositOpen] = useState(false);
+  const [dummyDepositSubmitting, setDummyDepositSubmitting] = useState(false);
+  const [dummyForm, setDummyForm] = useState({ UID: '', amount: '', note: '' });
+  const [dummyFormError, setDummyFormError] = useState(null);
 
   // Fetch users
   const fetchUsers = async () => {
@@ -172,6 +180,63 @@ const ManageUsers = () => {
     setUserDetails(null);
   };
 
+  // Dummy Deposit: open modal (optionally with user to pre-fill UID)
+  const handleOpenDummyDeposit = (user = null) => {
+    setDummyFormError(null);
+    setDummyForm({
+      UID: user?.UID ?? '',
+      amount: '',
+      note: '',
+    });
+    setDummyDepositOpen(true);
+  };
+
+  const handleCloseDummyDeposit = () => {
+    setDummyDepositOpen(false);
+    setDummyForm({ UID: '', amount: '', note: '' });
+    setDummyFormError(null);
+  };
+
+  const handleDummyDepositSubmit = async (e) => {
+    e.preventDefault();
+    setDummyFormError(null);
+    const UID = (dummyForm.UID || '').trim();
+    const amount = parseFloat(dummyForm.amount);
+    const note = (dummyForm.note || '').trim();
+
+    if (!UID) {
+      setDummyFormError('User UID is required');
+      return;
+    }
+    if (Number.isNaN(amount) || amount <= 0) {
+      setDummyFormError('Amount must be a positive number');
+      return;
+    }
+
+    try {
+      setDummyDepositSubmitting(true);
+      const response = await tradeService.dummyDeposit({
+        UID,
+        amount: Number(amount),
+        note: note || undefined,
+      });
+      if (response?.success) {
+        showSnackbar(response.message || 'Dummy deposit created successfully', 'success');
+        handleCloseDummyDeposit();
+        fetchUsers(); // refresh list in case balances are shown
+      } else {
+        setDummyFormError(response?.message || 'Failed to create dummy deposit');
+        showSnackbar(response?.message || 'Failed to create dummy deposit', 'error');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to create dummy deposit';
+      setDummyFormError(msg);
+      showSnackbar(msg, 'error');
+    } finally {
+      setDummyDepositSubmitting(false);
+    }
+  };
+
   // Handle page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -268,20 +333,41 @@ const ManageUsers = () => {
   return (
     <Box>
       {/* MainHeader */}
-      <Box sx={{ mb: { xs: 1, md: 2 } }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            color: AppColors.TXT_MAIN,
-            background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
+      <Box
+        sx={{
+          mb: { xs: 1, md: 2 },
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: AppColors.TXT_MAIN,
+              background: `linear-gradient(45deg, ${AppColors.GOLD_DARK}, ${AppColors.GOLD_LIGHT})`,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Manage Users
+          </Typography>
+          <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, mt: 0.5 }}>
+            View and manage user accounts
+          </Typography>
+        </Box>
+        <Button
+          className='btn-primary'
+          startIcon={<AccountBalanceWallet />}
+          onClick={() => handleOpenDummyDeposit()}
         >
-          Manage Users
-        </Typography>
+          Dummy Deposit
+        </Button>
       </Box>
       <Paper
         elevation={0}
@@ -501,7 +587,7 @@ const ManageUsers = () => {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Stack direction="row" spacing={1} justifyContent="center">
+                        <Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap">
                           <Tooltip title="View Details">
                             <IconButton
                               size="small"
@@ -514,6 +600,20 @@ const ManageUsers = () => {
                               }}
                             >
                               <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Dummy Deposit">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenDummyDeposit(user)}
+                              sx={{
+                                color: AppColors.GOLD_DARK,
+                                '&:hover': {
+                                  backgroundColor: `${AppColors.GOLD_DARK}20`,
+                                },
+                              }}
+                            >
+                              <AccountBalanceWallet fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -834,6 +934,185 @@ const ManageUsers = () => {
                 </Typography>
               </Box>
             )}
+          </CardContent>
+        </Card>
+      </Modal>
+
+      {/* Dummy Deposit Modal */}
+      <Modal
+        open={dummyDepositOpen}
+        onClose={handleCloseDummyDeposit}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: { xs: 1, md: 2 },
+        }}
+      >
+        <Card
+          sx={{
+            backgroundColor: AppColors.BG_CARD,
+            border: `1px solid ${AppColors.BG_SECONDARY}`,
+            borderRadius: 3,
+            maxWidth: 440,
+            width: '100%',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 2,
+                    bgcolor: `${AppColors.GOLD_DARK}20`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <AccountBalanceWallet sx={{ color: AppColors.GOLD_DARK, fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ color: AppColors.TXT_MAIN, fontWeight: 700 }}>
+                    Dummy Deposit
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: AppColors.TXT_SUB }}>
+                    Credit balance for a user (admin)
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton
+                onClick={handleCloseDummyDeposit}
+                size="small"
+                sx={{
+                  color: AppColors.TXT_SUB,
+                  '&:hover': { backgroundColor: `${AppColors.ERROR}20`, color: AppColors.ERROR },
+                }}
+              >
+                <Close />
+              </IconButton>
+            </Box>
+
+            <Box
+              component="form"
+              onSubmit={handleDummyDepositSubmit}
+              noValidate
+              sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+              {dummyFormError && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: AppColors.ERROR,
+                    bgcolor: `${AppColors.ERROR}14`,
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 1,
+                  }}
+                >
+                  {dummyFormError}
+                </Typography>
+              )}
+
+              <TextField
+                fullWidth
+                required
+                label="User UID"
+                placeholder="e.g. EXTRADE000369"
+                value={dummyForm.UID}
+                onChange={(e) => setDummyForm((p) => ({ ...p, UID: e.target.value }))}
+                InputProps={{
+                  sx: {
+                    bgcolor: AppColors.BG_SECONDARY,
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '& input': { color: AppColors.TXT_MAIN },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
+              />
+
+              <TextField
+                fullWidth
+                required
+                label="Amount"
+                type="number"
+                inputProps={{ min: 0.01, step: 0.01 }}
+                placeholder="0.00"
+                value={dummyForm.amount}
+                onChange={(e) => setDummyForm((p) => ({ ...p, amount: e.target.value }))}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start" sx={{ color: AppColors.TXT_SUB }}>
+                      $
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    bgcolor: AppColors.BG_SECONDARY,
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '& input': { color: AppColors.TXT_MAIN },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
+              />
+
+              <TextField
+                fullWidth
+                label="Note (optional)"
+                placeholder="e.g. Bonus credit"
+                value={dummyForm.note}
+                onChange={(e) => setDummyForm((p) => ({ ...p, note: e.target.value }))}
+                multiline
+                rows={2}
+                InputProps={{
+                  sx: {
+                    bgcolor: AppColors.BG_SECONDARY,
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '& textarea': { color: AppColors.TXT_MAIN },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
+              />
+
+              <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={handleCloseDummyDeposit}
+                  disabled={dummyDepositSubmitting}
+                  sx={{
+                    borderColor: AppColors.BG_SECONDARY,
+                    color: AppColors.TXT_MAIN,
+                    '&:hover': { borderColor: AppColors.TXT_SUB, bgcolor: `${AppColors.TXT_SUB}10` },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  fullWidth
+                  className='btn-primary'
+                  type="submit"
+                  disabled={dummyDepositSubmitting}
+                >
+                  {dummyDepositSubmitting ? (
+                    <CircularProgress size={22} sx={{ color: 'inherit' }} />
+                  ) : (
+                    'Confirm Deposit'
+                  )}
+                </Button>
+              </Stack>
+            </Box>
           </CardContent>
         </Card>
       </Modal>

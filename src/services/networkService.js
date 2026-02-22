@@ -72,6 +72,10 @@ const networkService = {
     const response = await networkApi.put(`${BASE_URL}/settings/roi`, data);
     return response.data;
   },
+  dummyDeposit: async (body) => {
+    const response = await networkApi.post(`${BASE_URL}/deposit/user`, body);
+    return response.data;
+  },
 };
 
 export default networkService;
