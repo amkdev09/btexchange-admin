@@ -314,15 +314,16 @@ const ManageFunds = () => {
                 <Button
                   onClick={() => setActiveChain(chain)}
                   fullWidth
-                  variant={isActive ? "contained" : "outlined"}
+                  className={isActive && 'btn-primary'}
                   startIcon={<img src={config.icon} alt={chain} style={{ width: 20, height: 20, filter: isActive ? 'brightness(0)' : 'none' }} />}
                   sx={{
-                    bgcolor: isActive ? AppColors.GOLD_DARK : 'transparent',
-                    borderColor: AppColors.GOLD_DARK,
-                    color: isActive ? AppColors.BG_MAIN : AppColors.GOLD_DARK,
+                    bgcolor: !isActive && 'transparent',
+                    border: '1px solid',
+                    borderColor: !isActive && AppColors.GOLD_DARK,
+                    color: !isActive && AppColors.GOLD_DARK,
                     '&:hover': {
-                      bgcolor: isActive ? AppColors.GOLD_LIGHT : `${AppColors.GOLD_DARK}10`,
-                      borderColor: AppColors.GOLD_LIGHT,
+                      bgcolor: !isActive && `${AppColors.GOLD_DARK}10`,
+                      borderColor: !isActive && AppColors.GOLD_LIGHT,
                     },
                     py: 1.5
                   }}
@@ -479,37 +480,18 @@ const ManageFunds = () => {
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <Tooltip title="View Details">
                             <IconButton
-                              size="small"
                               onClick={() => handleViewDetails(address, activeChain)}
-                              sx={{
-                                bgcolor: `${AppColors.TXT_SUB}20`,
-                                color: AppColors.TXT_SUB,
-                                '&:hover': {
-                                  bgcolor: `${AppColors.GOLD_DARK}20`,
-                                  color: AppColors.GOLD_DARK
-                                }
-                              }}
+                              size="small"
+                              sx={{ px: { xs: 1, md: 1.5 }, py: { xs: 0.27, md: 0.5 } }}
                             >
                               <Visibility fontSize="small" />
                             </IconButton>
                           </Tooltip>
                           <Button
+                            className='btn-primary'
                             onClick={() => handleSweepAddress(address, activeChain)}
                             disabled={loading || !treasuryAddress || parseFloat(balance || 0) === 0 || status === 'processing'}
-                            variant="contained"
                             size="small"
-                            sx={{
-                              bgcolor: AppColors.GOLD_DARK,
-                              color: AppColors.BG_MAIN,
-                              '&:hover': {
-                                bgcolor: AppColors.GOLD_LIGHT,
-                              },
-                              '&:disabled': {
-                                bgcolor: AppColors.BG_SECONDARY,
-                                color: AppColors.TXT_SUB,
-                              },
-                              minWidth: 80
-                            }}
                           >
                             {status === 'processing' ? 'Sweeping...' : 'Sweep'}
                           </Button>
