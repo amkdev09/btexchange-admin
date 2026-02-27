@@ -44,7 +44,7 @@ import tradeService from '../../../services/tradeService';
 import { AppColors } from '../../../constant/appColors';
 import BTLoader from '../../../components/Loader';
 import dayjs from "dayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import DatePicker from '../../../components/input/datePicker';
 
 const ManageHistoryNLogs = () => {
   const [activeTab, setActiveTab] = useState('trades');

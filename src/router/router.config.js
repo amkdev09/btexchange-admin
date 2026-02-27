@@ -1,4 +1,4 @@
-import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn, CandlestickChart, Settings, Telegram, AttachMoney, NotificationsNoneOutlined } from "@mui/icons-material";
+import { Leaderboard, Person, AccountBalanceWallet, History, MonetizationOn, CandlestickChart, Settings, Telegram, AttachMoney, NotificationsNoneOutlined, CopyAllOutlined } from "@mui/icons-material";
 import asyncComponent from "../utils/asyncComponent.jsx";
 
 export const authRouters = [
@@ -50,6 +50,13 @@ export const protectedRouters = [
     component: asyncComponent(() => import("../pages/trade/manageHistoryNLogs/index.jsx")),
   },
   {
+    path: "/manage-copy-trade",
+    inSidebarMenu: true,
+    label: "Manage Copy Trade",
+    icon: CandlestickChart,
+    component: asyncComponent(() => import("../pages/trade/manageCopyTrade/index.jsx")),
+  },
+  {
     inSidebarMenu: true,
     label: "Control Center",
     icon: Settings,
@@ -77,7 +84,7 @@ export const protectedRouters = [
     label: "Notifications",
     icon: NotificationsNoneOutlined,
     component: asyncComponent(() => import("../pages/trade/notifications/index.jsx")),
-  }
+  },
 ];
 
 export const protectedRouters2 = [
@@ -110,11 +117,11 @@ export const protectedRouters2 = [
     component: asyncComponent(() => import("../pages/network/manageFinance/index.jsx")),
   },
   {
-    path: "/network/trade-data",
+    path: "/network/manage-trade-history",
     inSidebarMenu: true,
-    label: "Trade Data",
+    label: "Manage Trade History",
     icon: CandlestickChart,
-    component: asyncComponent(() => import("../pages/network/TradeData/index.jsx")),
+    component: asyncComponent(() => import("../pages/network/ManageTradeHistory/index.jsx")),
   },
   {
     path: "/network/roi-settings",

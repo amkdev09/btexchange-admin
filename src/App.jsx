@@ -6,8 +6,6 @@ import AppRouter from "./router";
 import theme from "./utils/theme";
 import { store } from "./store/store";
 import "./styles/global.scss";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 function App() {
   return (
@@ -15,9 +13,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <SnackbarProvider>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <AppRouter />
-            </LocalizationProvider>
+            <AppRouter />
           </SnackbarProvider>
         </BrowserRouter>
       </ThemeProvider>
