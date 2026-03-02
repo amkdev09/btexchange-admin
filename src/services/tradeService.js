@@ -130,6 +130,14 @@ const tradeService = {
     const response = await api.post(`${BASE_URL}/users/dummy-deposit`, body);
     return response.data;
   },
+  updateUserState: async (body) => {
+    const response = await api.post(`${BASE_URL}/stats/users`, body);
+    return response.data;
+  },
+  getUserStats: async () => {
+    const response = await api.get(`/trade/getUserStats`);
+    return response.data;
+  },
 };
 
 export default tradeService;

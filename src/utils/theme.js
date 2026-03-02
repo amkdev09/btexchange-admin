@@ -20,15 +20,15 @@ const theme = createTheme({
   palette: {
     primary: {
       main: "#D4AF37", // Gold primary from AppColors
-      light: "#FFE44D", // Gold light
-      dark: "#FFD700", // Gold dark
+      light: "#D4AF37", // Gold light
+      dark: "#D4AF37", // Gold dark
       contrastText: "#000",
     },
     secondary: {
       main: "#000", // Black
       light: "#1a1a1a", // BG_SECONDARY
       dark: "#0a0a0a", // BG_CARD
-      contrastText: "#FFD700",
+      contrastText: "#D4AF37",
     },
     background: {
       default: "#000", // BG_MAIN
@@ -98,19 +98,9 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: "none",
-          fontWeight: 600,
-          padding: "8px 16px",
           fontSize: "clamp(0.875rem, 1.2vw, 1rem)",
           "@media (max-width: 600px)": {
-            padding: "6px 12px",
             fontSize: "0.875rem",
-          },
-        },
-        containedPrimary: {
-          background: "linear-gradient(135deg, #D4AF37 0%, #FFE44D 100%)",
-          color: "#000",
-          "&:hover": {
-            background: "linear-gradient(135deg, #FFE44D 0%, #D4AF37 100%)",
           },
         },
       },
@@ -128,16 +118,16 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundColor: "#0a0a0a", // BG_CARD
+          backgroundColor: "#1a1a1a", // BG_CARD
           backgroundImage: "none",
-          '--Paper-overlay': "#0a0a0a !important",
+          '--Paper-overlay': "#1a1a1a !important",
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundColor: "#0a0a0a", // BG_CARD
+          backgroundColor: "#1a1a1a", // BG_CARD
           backgroundImage: "none",
           border: "1px solid #666666", // HLT_NONE
         },
@@ -146,7 +136,7 @@ const theme = createTheme({
     MuiTable: {
       styleOverrides: {
         root: {
-          backgroundColor: "#0a0a0a", // BG_CARD
+          backgroundColor: "#1a1a1a", // BG_CARD
         },
       },
     },

@@ -42,6 +42,7 @@ import {
   Check,
   Restore,
   AccountBalanceWallet,
+  Update,
 } from '@mui/icons-material';
 import { AppColors } from '../../../constant/appColors';
 import useSnackbar from '../../../hooks/useSnackbar';
@@ -80,6 +81,11 @@ const ManageUsers = () => {
   const [dummyForm, setDummyForm] = useState({ UID: '', amount: '', note: '' });
   const [dummyFormError, setDummyFormError] = useState(null);
 
+  const [openUserStatsModal, setOpenUserStatsModal] = useState(false);
+  const [userStatsSubmitting, setUserStatsSubmitting] = useState(false);
+  const [userStatsForm, setUserStatsForm] = useState({ totalUsers: 0, newUsers: 0 });
+  const [userStatsFormError, setUserStatsFormError] = useState(null);
+
   // Fetch users
   const fetchUsers = async () => {
     try {
@@ -102,10 +108,14 @@ const ManageUsers = () => {
         params.isDeleted = false;
       }
 
-      const response = await tradeService.getUsers(params);
+      const [response, userStatsResponse] = await Promise.all([tradeService.getUsers(params), tradeService.getUserStats()]);
       if (response.success) {
         setUsers(response.data || []);
         setTotalUsers(response.pagination?.total || 0);
+        setUserStatsForm({
+          totalUsers: userStatsResponse.data.totalUsers || 0,
+          newUsers: userStatsResponse.data.newUsers || 0,
+        });
       } else {
         showSnackbar('Failed to fetch users', 'error');
       }
@@ -237,6 +247,63 @@ const ManageUsers = () => {
     }
   };
 
+  // Update User Stats: open modal (prefill with current totalUsers from pagination)
+  const handleOpenUserStatsModal = () => {
+    setUserStatsFormError(null);
+    setOpenUserStatsModal(true);
+  };
+
+  const handleCloseUserStatsModal = () => {
+    setOpenUserStatsModal(false);
+    setUserStatsFormError(null);
+  };
+
+  const handleUserStatsSubmit = async (e) => {
+    e.preventDefault();
+    setUserStatsFormError(null);
+    const total = parseInt(userStatsForm.totalUsers) || 0;
+    const newU = parseInt(userStatsForm.newUsers) || 0;
+
+    if (total === 0) {
+      setUserStatsFormError('Total users is required');
+      return;
+    }
+    if (Number.isNaN(total) || total < 0) {
+      setUserStatsFormError('Total users must be a non-negative integer');
+      return;
+    }
+    if (newU === 0 || newU === null) {
+      setUserStatsFormError('New users is required');
+      return;
+    }
+    if (Number.isNaN(newU) || newU < 0) {
+      setUserStatsFormError('New users must be a non-negative integer');
+      return;
+    }
+
+    try {
+      setUserStatsSubmitting(true);
+      const response = await tradeService.updateUserState({
+        totalUsers: total,
+        newUsers: newU,
+      });
+      if (response?.success) {
+        showSnackbar(response.message || 'User stats updated successfully', 'success');
+        handleCloseUserStatsModal();
+        fetchUsers();
+      } else {
+        setUserStatsFormError(response?.message || 'Failed to update user stats');
+        showSnackbar(response?.message || 'Failed to update user stats', 'error');
+      }
+    } catch (err) {
+      const msg = err?.message || err?.response?.data?.message || 'Failed to update user stats';
+      setUserStatsFormError(msg);
+      showSnackbar(msg, 'error');
+    } finally {
+      setUserStatsSubmitting(false);
+    }
+  };
+
   // Handle page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -361,13 +428,22 @@ const ManageUsers = () => {
             View and manage user accounts
           </Typography>
         </Box>
-        <Button
-          className='btn-primary'
-          startIcon={<AccountBalanceWallet />}
-          onClick={() => handleOpenDummyDeposit()}
-        >
-          Dummy Deposit
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<Update />}
+            onClick={handleOpenUserStatsModal}
+          >
+            Update User Stats
+          </Button>
+          <Button
+            className='btn-primary'
+            startIcon={<AccountBalanceWallet />}
+            onClick={() => handleOpenDummyDeposit()}
+          >
+            Dummy Deposit
+          </Button>
+        </Stack>
       </Box>
       <Paper
         elevation={0}
@@ -1109,6 +1185,162 @@ const ManageUsers = () => {
                     <CircularProgress size={22} sx={{ color: 'inherit' }} />
                   ) : (
                     'Confirm Deposit'
+                  )}
+                </Button>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Modal>
+
+      {/* Update User Stats Modal */}
+      <Modal
+        open={openUserStatsModal}
+        onClose={handleCloseUserStatsModal}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: { xs: 1, md: 2 },
+        }}
+      >
+        <Card
+          sx={{
+            backgroundColor: AppColors.BG_CARD,
+            border: `1px solid ${AppColors.BG_SECONDARY}`,
+            borderRadius: 3,
+            maxWidth: 440,
+            width: '100%',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 2,
+                    bgcolor: `${AppColors.GOLD_DARK}20`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Update sx={{ color: AppColors.GOLD_DARK, fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ color: AppColors.TXT_MAIN, fontWeight: 700 }}>
+                    Update User Stats
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: AppColors.TXT_SUB }}>
+                    Set total users and new users counts for dashboard stats
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton
+                onClick={handleCloseUserStatsModal}
+                size="small"
+                sx={{
+                  color: AppColors.TXT_SUB,
+                  '&:hover': { backgroundColor: `${AppColors.ERROR}20`, color: AppColors.ERROR },
+                }}
+                aria-label="Close"
+              >
+                <Close />
+              </IconButton>
+            </Box>
+
+            <Box
+              component="form"
+              onSubmit={handleUserStatsSubmit}
+              noValidate
+              sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+              {userStatsFormError && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: AppColors.ERROR,
+                    bgcolor: `${AppColors.ERROR}14`,
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 1,
+                  }}
+                >
+                  {userStatsFormError}
+                </Typography>
+              )}
+
+              <TextField
+                fullWidth
+                required
+                label="Total Users"
+                type="number"
+                inputProps={{ min: 0, step: 1 }}
+                placeholder="e.g. 10"
+                value={userStatsForm.totalUsers}
+                onChange={(e) => setUserStatsForm((p) => ({ ...p, totalUsers: parseInt(e.target.value) || 0 }))}
+                InputProps={{
+                  sx: {
+                    bgcolor: AppColors.BG_SECONDARY,
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '& input': { color: AppColors.TXT_MAIN },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
+              />
+
+              <TextField
+                fullWidth
+                required
+                label="New Users"
+                type="number"
+                inputProps={{ min: 0, step: 1 }}
+                placeholder="e.g. 5"
+                value={userStatsForm.newUsers}
+                onChange={(e) => setUserStatsForm((p) => ({ ...p, newUsers: parseInt(e.target.value) || 0 }))}
+                InputProps={{
+                  sx: {
+                    bgcolor: AppColors.BG_SECONDARY,
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK },
+                    '& input': { color: AppColors.TXT_MAIN },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
+              />
+
+              <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={handleCloseUserStatsModal}
+                  disabled={userStatsSubmitting}
+                  sx={{
+                    borderColor: AppColors.BG_SECONDARY,
+                    color: AppColors.TXT_MAIN,
+                    '&:hover': { borderColor: AppColors.TXT_SUB, bgcolor: `${AppColors.TXT_SUB}10` },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  fullWidth
+                  className="btn-primary"
+                  type="submit"
+                  disabled={userStatsSubmitting}
+                >
+                  {userStatsSubmitting ? (
+                    <CircularProgress size={22} sx={{ color: 'inherit' }} />
+                  ) : (
+                    'Update Stats'
                   )}
                 </Button>
               </Stack>
