@@ -44,7 +44,6 @@ const TelegramLinksPage = () => {
       setLoading(true);
       setError(null);
       const response = await tradeService.getSocialConfig();
-      console.log('response: ', response);
       if (response?.success && response?.data != null) {
         const data = response.data;
         setConfig(data);
