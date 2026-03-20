@@ -11,6 +11,7 @@ import {
   Card,
   CardContent,
   InputAdornment,
+  Divider,
 } from '@mui/material';
 import { Telegram, Groups as GroupsIcon, InfoOutlined } from '@mui/icons-material';
 import { AppColors } from '../../../constant/appColors';
@@ -20,6 +21,8 @@ import tradeService from '../../../services/tradeService';
 const TELEGRAM_FIELDS = [
   { key: 'telegramUrl', label: 'Telegram channel / bot', placeholder: 'https://t.me/your_channel', Icon: Telegram },
   { key: 'groupTelegramUrl', label: 'Telegram group', placeholder: 'https://t.me/your_group', Icon: GroupsIcon },
+  { key: 'facebookUrl', label: 'Promotional Telegram URL 1', placeholder: 'https://t.me/your_channel', Icon: Telegram, promotional: true },
+  { key: 'instagramUrl', label: 'Promotional Telegram URL 2', placeholder: 'https://t.me/your_channel', Icon: Telegram, promotional: true },
 ];
 
 const TelegramLinksPage = () => {
@@ -30,6 +33,9 @@ const TelegramLinksPage = () => {
   const [form, setForm] = useState({
     telegramUrl: '',
     groupTelegramUrl: '',
+    // promotionalUrl: '',
+    facebookUrl: '',
+    instagramUrl: '',
   });
   const [error, setError] = useState(null);
 
@@ -38,6 +44,7 @@ const TelegramLinksPage = () => {
       setLoading(true);
       setError(null);
       const response = await tradeService.getSocialConfig();
+      console.log('response: ', response);
       if (response?.success && response?.data != null) {
         const data = response.data;
         setConfig(data);
@@ -74,6 +81,8 @@ const TelegramLinksPage = () => {
       const body = {
         telegramUrl: form.telegramUrl?.trim() || '',
         groupTelegramUrl: form.groupTelegramUrl?.trim() || '',
+        facebookUrl: form.facebookUrl?.trim() || '',
+        instagramUrl: form.instagramUrl?.trim() || '',
       };
       const response = await tradeService.updateSocialConfig(body);
       if (response?.success) {
@@ -154,7 +163,7 @@ const TelegramLinksPage = () => {
               >
                 Current links
               </Typography>
-              {TELEGRAM_FIELDS.map(({ key, label, Icon }) => (
+              {TELEGRAM_FIELDS?.filter(({ promotional }) => promotional !== true).map(({ key, label, Icon }) => (
                 <Box
                   key={key}
                   sx={{
@@ -162,7 +171,49 @@ const TelegramLinksPage = () => {
                     alignItems: 'center',
                     gap: 1.5,
                     py: 1.25,
-                    borderBottom: key === 'telegramUrl' ? `1px solid ${AppColors.BG_SECONDARY}` : 'none',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      bgcolor: AppColors.HLT_LIGHT,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Icon sx={{ color: AppColors.GOLD_DARK, fontSize: 20 }} />
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, fontSize: '0.75rem' }}>
+                      {label}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: config[key] ? AppColors.TXT_MAIN : AppColors.TXT_SUB,
+                        fontWeight: config[key] ? 500 : 400,
+                      }}
+                      noWrap
+                    >
+                      {config[key] ? 'Configured' : 'Not set'}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+              <Divider sx={{ borderColor: AppColors.BG_SECONDARY }} orientation="horizontal" textAlign="left" >
+                <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, fontSize: '0.75rem' }}>Promotional links</Typography>
+              </Divider>
+              {TELEGRAM_FIELDS?.filter(({ promotional }) => promotional === true).map(({ key, label, Icon }) => (
+                <Box
+                  key={key}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    py: 1.25,
                   }}
                 >
                   <Box
@@ -236,7 +287,37 @@ const TelegramLinksPage = () => {
               Update Telegram links
             </Typography>
 
-            {TELEGRAM_FIELDS.map(({ key, label, placeholder, Icon }) => (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {TELEGRAM_FIELDS?.filter(({ promotional }) => promotional !== true).map(({ key, label, placeholder, Icon }) => (
+                <TextField
+                  key={key}
+                  fullWidth
+                  label={label}
+                  placeholder={placeholder}
+                  value={form[key]}
+                  onChange={handleChange(key)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Icon sx={{ color: AppColors.GOLD_DARK, fontSize: 22 }} />
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      bgcolor: AppColors.BG_SECONDARY,
+                      borderRadius: 2,
+                      '& fieldset': { borderColor: 'transparent' },
+                      '&:hover fieldset': { borderColor: AppColors.GOLD_DARK + '40' },
+                      '&.Mui-focused fieldset': { borderColor: AppColors.GOLD_DARK, borderWidth: 1 },
+                    },
+                  }}
+                  InputLabelProps={{ sx: { color: AppColors.TXT_SUB } }}
+                />
+              ))}
+            </Box>
+            <Divider sx={{ borderColor: AppColors.BG_SECONDARY, my: 2 }} orientation="horizontal" textAlign="left" >
+              <Typography variant="body2" sx={{ color: AppColors.TXT_SUB, fontSize: '0.75rem' }}>Promotional links</Typography>
+            </Divider>
+            {TELEGRAM_FIELDS?.filter(({ promotional }) => promotional === true).map(({ key, label, placeholder, Icon }) => (
               <TextField
                 key={key}
                 fullWidth
@@ -262,7 +343,6 @@ const TelegramLinksPage = () => {
                 sx={{ mb: 2 }}
               />
             ))}
-
             <Box
               sx={{
                 mt: 2,

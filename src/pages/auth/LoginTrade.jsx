@@ -61,6 +61,8 @@ export default function LoginTrade() {
           setUser(Data.user, Data.token);
           showSnackbar(message || "Login successful", "success");
           navigate("/");
+        }else{
+          showSnackbar(message || "Login failed. Please try again.", "error");
         }
       } catch (err) {
         console.error("❌ Admin login failed:", err);

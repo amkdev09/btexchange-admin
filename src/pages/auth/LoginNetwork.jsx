@@ -59,6 +59,8 @@ export default function NetworkAdminLogin() {
           setUser(data.user, data.token);
           showSnackbar(message || "Login successful", "success");
           navigate("/network/dashboard");
+        }else{
+          showSnackbar(message || "Login failed. Please try again.", "error");
         }
       } catch (err) {
         console.error("❌ Network admin login failed:", err);
